@@ -1,208 +1,863 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Herramienta Interactiva - Estadística Bivariada (1° Medio)</title>
-    <!-- Tailwind CSS para diseño moderno -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Chart.js para visualización de nubes de puntos -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Análisis Bivariado y Correlación | Herramienta Interactiva</title>
+  <!-- Tailwind CSS para diseño limpio y moderno -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- MathJax para visualización rigurosa de expresiones matemáticas LaTeX -->
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <!-- Chart.js para gráficos de dispersión y analíticas del docente -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- SDKs de Firebase (Firestore) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <style>
+    body { background-color: #f8fafc; color: #1e293b; font-family: system-ui, -apple-system, sans-serif; }
+    .tab-active { border-bottom: 3px solid #2563eb; color: #2563eb; font-weight: bold; }
+  </style>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col justify-between">
+<body class="min-h-screen flex flex-col">
 
-    <!-- HEADER / NAVEGACIÓN -->
-    <header class="bg-indigo-600 text-white shadow-md py-4 px-6 flex justify-between items-center">
-        <div>
-            <h1 class="text-xl font-bold">Estadística Bivariada: Nubes de Puntos y Correlación ($r$)</h1>
-            <p class="text-xs text-indigo-200">1° Medio A - Matemática | Portafolio Docente</p>
+  <!-- ENCABEZADO Y TEMPORIZADOR GLOBAL DE CLASE -->
+  <header class="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-4">
+      <div>
+        <h1 class="text-xl font-bold text-blue-600">📊 Taller de Estadística Bivariada ($1^\circ$ Medio)</h1>
+        <p class="text-xs text-slate-500">OA 12: Nubes de puntos, recta de regresión y coeficiente de correlación $r$</p>
+      </div>
+      
+      <!-- Temporizador Global (80 minutos) -->
+      <div class="flex items-center gap-3 bg-blue-50 border border-blue-200 px-4 py-2 rounded-xl">
+        <div class="text-right">
+          <span class="text-xs font-semibold text-blue-800 block">TIEMPO DE CLASE</span>
+          <span id="timerDisplay" class="text-2xl font-mono font-bold text-blue-700">80:00</span>
         </div>
-        <div>
-            <button onclick="openLoginModal()" class="bg-indigo-700 hover:bg-indigo-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
-                Acceso Docente
-            </button>
+        <div class="flex gap-1">
+          <button onclick="iniciarClase()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition">Iniciar</button>
+          <button onclick="pausarClase()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-medium transition">Pausa</button>
         </div>
-    </header>
-
-    <!-- CONTENIDO PRINCIPAL -->
-    <main class="max-w-6xl mx-auto p-6 w-full flex-grow grid grid-cols-1 md:grid-cols-3 gap-6">
-        
-        <!-- Panel Izquierdo: Controles y Temporizador -->
-        <section class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
-            <div>
-                <h2 class="text-lg font-semibold text-slate-700 mb-4 border-b pb-2">Gestión de la Sesión</h2>
-                
-                <!-- Temporizador Automático -->
-                <div class="bg-slate-100 p-4 rounded-lg text-center mb-6">
-                    <span class="text-xs text-slate-500 uppercase tracking-wider font-semibold">Tiempo de Sesión</span>
-                    <div id="timer" class="text-3xl font-mono font-bold text-indigo-600 mt-1">45:00</div>
-                </div>
-
-                <!-- Selector de Casos -->
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-slate-600 mb-2">Seleccionar Caso de Estudio:</label>
-                    <select id="caseSelect" onchange="changeCase()" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500">
-                        <option value="1">Caso 1: Presión Arterial (Salud)</option>
-                        <option value="2">Caso 2: Ejercicio vs Frecuencia Cardíaca</option>
-                        <option value="3">Caso 3: Clientes vs Ventas (PYME)</option>
-                    </select>
-                </div>
-
-                <!-- Botones Dinámicos de Visualización -->
-                <div class="space-y-2 mt-4">
-                    <button onclick="togglePoints()" class="w-full bg-slate-200 hover:bg-slate-300 text-slate-700 py-2 rounded-lg text-sm font-medium transition">
-                        Activar/Desactivar Puntos
-                    </button>
-                    <button onclick="toggleLine()" class="w-full bg-slate-200 hover:bg-slate-300 text-slate-700 py-2 rounded-lg text-sm font-medium transition">
-                        Mostrar/Ocultar Recta de Ajuste
-                    </button>
-                </div>
-            </div>
-
-            <div class="mt-6 pt-4 border-t border-slate-100">
-                <button onclick="exportResults()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-lg text-sm font-medium transition">
-                    Exportar Resultados / Quiz
-                </button>
-            </div>
-        </section>
-
-        <!-- Panel Central y Derecho: Gráfico Interactivo y Deslizador de r -->
-        <section class="md:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
-            <div>
-                <div class="flex justify-between items-center mb-4 border-b pb-2">
-                    <h3 id="caseTitle" class="text-lg font-semibold text-slate-700">Caso 1: Monitoreo de Presión Arterial</h3>
-                    <span id="rValueBadge" class="bg-indigo-100 text-indigo-800 text-xs font-semibold px-2.5 py-1 rounded-full">r = 0.85</span>
-                </div>
-
-                <!-- Simulación de Gráfico -->
-                <div class="bg-slate-50 border border-slate-200 rounded-lg h-64 flex items-center justify-center relative mb-4">
-                    <canvas id="scatterChart" class="max-h-full max-w-full"></canvas>
-                </div>
-
-                <!-- Pestaña de Exploración con Deslizador Dinámico de r -->
-                <div class="bg-indigo-50/50 p-4 rounded-lg border border-indigo-100">
-                    <label for="rSlider" class="block text-sm font-medium text-indigo-900 mb-1">
-                        Deslizador Dinámico del Coeficiente de Correlación ($r$): <span id="rLabel" class="font-bold text-indigo-600">0.85</span>
-                    </label>
-                    <input type="range" id="rSlider" min="-1" max="1" step="0.05" value="0.85" oninput="updateR(this.value)" class="w-full accent-indigo-600 cursor-pointer">
-                    <div class="flex justify-between text-xs text-slate-500 mt-1">
-                        <span>-1 (Inversa fuerte)</span>
-                        <span>0 (Nula)</span>
-                        <span>1 (Directa fuerte)</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Preguntas Metacognitivas Integradas -->
-            <div class="mt-6 bg-slate-50 p-4 rounded-lg border border-slate-200">
-                <h4 class="text-sm font-semibold text-slate-700 mb-2">Reflexión Metacognitiva:</h4>
-                <p id="metaQuestion" class="text-sm text-slate-600 mb-2">¿Qué sucede con la dispersión de la nube de puntos cuando el valor de $r$ se acerca a 0?</p>
-                <input type="text" id="metaAnswer" placeholder="Escribe tu respuesta aquí..." class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500">
-            </div>
-        </section>
-
-    </main>
-
-    <!-- FOOTER -->
-    <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500">
-        Herramienta Interactiva de Autoría Docente - OA 12 (1° Medio) | Portafolio 2026
-    </footer>
-
-    <!-- MODAL DE ACCESO DOCENTE (CORREGIDO PARA SEGURIDAD) -->
-    <div id="loginModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6 relative">
-            <button onclick="closeLoginModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
-            
-            <h3 class="text-lg font-bold text-slate-800 mb-2">Panel de Control Docente</h3>
-            <p class="text-xs text-slate-500 mb-6">Ingrese su contraseña para desbloquear los ajustes avanzados y reportes de los estudiantes.</p>
-            
-            <form id="docenteLoginForm" onsubmit="handleDocenteLogin(event)">
-                <div class="mb-4">
-                    <label for="docentePassword" class="block text-sm font-medium text-slate-700 mb-1">Contraseña de Acceso:</label>
-                    <!-- CORRECCIÓN DE SEGURIDAD APLICADA: type="password" oculta la clave con puntos y autocomplete="new-password" evita que el navegador la autocomplemente -->
-                    <input 
-                        type="password" 
-                        id="docentePassword" 
-                        name="docentePassword" 
-                        placeholder="Ingrese su clave" 
-                        autocomplete="new-password" 
-                        required
-                        class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                    >
-                </div>
-                <div class="flex justify-end space-x-3">
-                    <button type="button" onclick="closeLoginModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-medium transition">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition">Ingresar</button>
-                </div>
-            </form>
-        </div>
+      </div>
     </div>
 
-    <!-- SCRIPTS DE FUNCIONALIDAD -->
-    <script>
-        // Funciones del Modal de Acceso Docente
-        function openLoginModal() {
-            document.getElementById('loginModal').classList.remove('hidden');
-        }
+    <!-- RUTA DE APRENDIZAJE VISIBLE -->
+    <nav class="bg-slate-100 border-t border-slate-200 px-4 py-2">
+      <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2 text-xs">
+        <span class="font-bold text-slate-700 uppercase tracking-wider">Ruta de Aprendizaje:</span>
+        <div id="rutaInicio" class="px-3 py-1 rounded-full bg-blue-600 text-white font-semibold transition">1. Inicio & Objetivo</div>
+        <div id="rutaDesarrollo" class="px-3 py-1 rounded-full bg-slate-300 text-slate-700 font-semibold transition">2. Desarrollo (Casos & GeoGebra)</div>
+        <div id="rutaCierre" class="px-3 py-1 rounded-full bg-slate-300 text-slate-700 font-semibold transition">3. Cierre & Quiz Formativo</div>
+        <div id="rutaDocente" class="px-3 py-1 rounded-full bg-purple-600 text-white font-semibold transition">🔒 Acceso Docente</div>
+      </div>
+    </nav>
+  </header>
 
-        function closeLoginModal() {
-            document.getElementById('loginModal').classList.add('hidden');
-            document.getElementById('docenteLoginForm').reset();
-        }
+  <!-- CONTENIDO PRINCIPAL POR PESTAÑAS -->
+  <main class="flex-grow max-w-7xl w-full mx-auto p-4 md:p-6">
+    
+    <!-- PESTAÑA 1: INICIO -->
+    <section id="pestanaInicio" class="space-y-6">
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8">
+        <div class="inline-block bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full mb-3">Momento 1: Activación y Contexto (15 min)</div>
+        <h2 class="text-2xl font-bold text-slate-900 mb-4">🎯 Objetivo de la Sesión</h2>
+        <p class="text-lg text-slate-700 leading-relaxed bg-blue-50/50 p-4 rounded-xl border border-blue-100 mb-6">
+          "Formular y fundamentar conjeturas cualitativas y cuantitativas sobre la relación entre dos variables mediante nubes de puntos, la recta de regresión y el índice de correlación <strong>$r$</strong>, demostrando rigurosidad, pensamiento crítico y valoración del trabajo colaborativo."
+        </p>
 
-        function handleDocenteLogin(event) {
-            event.preventDefault();
-            const pass = document.getElementById('docentePassword').value;
-            // Clave configurada: profe26
-            if (pass === 'profe26') {
-                alert('¡Acceso concedido! Panel docente habilitado.');
-                closeLoginModal();
-            } else {
-                alert('Contraseña incorrecta. Intente nuevamente.');
-                document.getElementById('docentePassword').value = '';
+        <div class="grid md:grid-cols-3 gap-4 mb-6">
+          <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+            <span class="text-blue-600 font-bold block mb-1">🧠 Saber (Conocimiento)</span>
+            <p class="text-sm text-slate-600">Concepto de correlación bivariada, dispersión y el índice $r$ (de $-1$ a $1$).</p>
+          </div>
+          <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+            <span class="text-blue-600 font-bold block mb-1">🛠️ Saber Hacer (Habilidad)</span>
+            <p class="text-sm text-slate-600">Interpretar tablas de doble entrada, nubes de puntos y tendencias lineales.</p>
+          </div>
+          <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+            <span class="text-blue-600 font-bold block mb-1">❤️ Saber Ser (Actitud)</span>
+            <p class="text-sm text-slate-600">Pensamiento crítico frente a la información y rigor en el análisis estadístico.</p>
+          </div>
+        </div>
+
+        <div class="border-t border-slate-100 pt-6">
+          <h3 class="font-bold text-slate-800 mb-2">💡 ¿Qué es el índice de correlación $r$?</h3>
+          <p class="text-sm text-slate-600 leading-relaxed mb-4">
+            El coeficiente de correlación de Pearson, denotado como <strong>$r$</strong>, es un valor numérico entre <strong>$-1$</strong> y <strong>$1$</strong> que mide la fuerza y dirección de la asociación lineal entre dos variables cuantitativas. Si $r > 0$, la correlación es positiva; si $r < 0$, es negativa; y si $r \approx 0$, no existe relación lineal.
+          </p>
+          <div class="bg-amber-50 border border-amber-200 p-4 rounded-xl text-xs text-amber-800">
+            <strong>Reflexión Metacognitiva Inicial:</strong> ¿Por qué crees que en la vida cotidiana dos variables pueden parecer relacionadas cuando en realidad no existe una causa directa entre ellas?
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-end">
+        <button onclick="cambiarPestana('desarrollo')" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-xl shadow transition flex items-center gap-2">
+          Avanzar al Desarrollo ➔
+        </button>
+      </div>
+    </section>
+
+    <!-- PESTAÑA 2: DESARROLLO -->
+    <section id="pestanaDesarrollo" class="hidden space-y-6">
+      <!-- Subpestañas de Desarrollo -->
+      <div class="flex flex-wrap gap-2 border-b border-slate-200 pb-3">
+        <button onclick="cambiarSubDesarrollo('casos')" id="btnSubCasos" class="px-4 py-2 rounded-lg font-semibold text-sm bg-blue-600 text-white transition">🔍 Casos de Estudio (1 al 5)</button>
+        <button onclick="cambiarSubDesarrollo('laboratorio')" id="btnSubLab" class="px-4 py-2 rounded-lg font-semibold text-sm bg-slate-200 text-slate-700 transition">🧪 Laboratorio GeoGebra ($r$ Ajustable)</button>
+      </div>
+
+      <!-- VISTA SUBPESTAÑA: 5 CASOS -->
+      <div id="subCasosContainer" class="space-y-6">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+          <div class="flex justify-between items-center mb-4">
+            <span id="badgeCaso" class="bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full">Caso 1 de 5</span>
+            <div class="flex gap-2">
+              <button onclick="cambiarCaso(-1)" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1 rounded-lg text-xs">Anterior</button>
+              <button onclick="cambiarCaso(1)" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg text-xs">Siguiente Caso</button>
+            </div>
+          </div>
+
+          <h3 id="tituloCaso" class="text-xl font-bold text-slate-900 mb-2">Título del Caso</h3>
+          <p id="descCaso" class="text-sm text-slate-600 mb-6">Descripción contextualizada del caso...</p>
+
+          <div class="grid md:grid-cols-2 gap-6 items-start">
+            <!-- Tabla y Controles -->
+            <div class="space-y-4">
+              <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 overflow-x-auto">
+                <h4 class="text-xs font-bold text-slate-500 uppercase mb-2">Tabla de Doble Entrada</h4>
+                <table id="tablaCaso" class="w-full text-left text-sm border-collapse">
+                  <!-- Generado por JS -->
+                </table>
+              </div>
+
+              <div class="flex flex-wrap gap-3">
+                <button onclick="toggleGraficoPuntos()" id="btnTogglePuntos" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-medium transition">Ocultar/Mostrar Datos en Gráfico</button>
+                <button onclick="toggleLineaRegresion()" id="btnToggleLinea" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-xs font-medium transition">Ocultar/Mostrar Recta Ajuste</button>
+              </div>
+
+              <div class="bg-blue-50/60 p-4 rounded-xl border border-blue-100">
+                <span class="text-xs font-bold text-blue-800 block mb-1">Índice de Correlación y Recta:</span>
+                <p id="infoCorrelacion" class="text-sm font-semibold text-slate-800"></p>
+              </div>
+            </div>
+
+            <!-- Gráfico Bivariado -->
+            <div class="bg-white p-4 rounded-xl border border-slate-200 flex flex-col items-center justify-center h-80 relative">
+              <canvas id="graficoBivariado" class="w-full h-full"></canvas>
+            </div>
+          </div>
+
+          <!-- Pregunta Metacognitiva del Caso -->
+          <div class="mt-6 bg-amber-50/70 border border-amber-200 p-4 rounded-xl">
+            <span class="text-xs font-bold text-amber-900 uppercase block mb-1">✍️ Pregunta Metacognitiva Obligatoria:</span>
+            <p id="preguntaMetacognitiva" class="text-sm text-amber-900 mb-3"></p>
+            <textarea id="respuestaEstudianteCaso" rows="2" class="w-full p-3 rounded-lg border border-amber-300 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none bg-white" placeholder="Escribe tu reflexión o análisis aquí..."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- VISTA SUBPESTAÑA: LABORATORIO GEOGEBRA (R AJUSTABLE) -->
+      <div id="subLabContainer" class="hidden space-y-6">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8">
+          <div class="inline-block bg-purple-100 text-purple-800 text-xs font-semibold px-3 py-1 rounded-full mb-3">Laboratorio Interactivo Estilo GeoGebra</div>
+          <h3 class="text-xl font-bold text-slate-900 mb-2">Modulador Dinámico del Coeficiente $r$</h3>
+          <p class="text-sm text-slate-600 mb-6">Desplaza la barra para modificar el valor de $r$ y observa en tiempo real cómo cambia la nube de puntos tabulados y su recta de regresión.</p>
+
+          <div class="grid md:grid-cols-2 gap-6 items-center">
+            <div class="space-y-6">
+              <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                <label for="sliderR" class="block text-sm font-bold text-slate-700 mb-2">Valor de Correlación ($r$): <span id="valRText" class="text-blue-600 font-mono text-lg">0.85</span></label>
+                <input id="sliderR" type="range" min="-1" max="1" step="0.05" value="0.85" oninput="actualizarLaboratorioR(this.value)" class="w-full accent-blue-600 cursor-pointer">
+                <div class="flex justify-between text-xs text-slate-400 mt-1 font-mono">
+                  <span>-1.0 (Negativa Fuerte)</span>
+                  <span>0.0 (Nula)</span>
+                  <span>+1.0 (Positiva Fuerte)</span>
+                </div>
+              </div>
+
+              <div class="bg-purple-50 p-4 rounded-xl border border-purple-100 text-xs text-purple-900 space-y-2">
+                <strong>Análisis Metacognitivo del Laboratorio:</strong>
+                <ul class="list-disc pl-4 space-y-1">
+                  <li>¿Qué sucede con la dispersión de la nube cuando $r$ se aproxima a $0$?</li>
+                  <li>¿Cómo cambia la inclinación de la recta cuando $r$ pasa de positivo a negativo?</li>
+                </ul>
+                <textarea id="respLab" rows="2" class="w-full p-2 rounded border border-purple-200 bg-white mt-2" placeholder="Responde aquí tus observaciones..."></textarea>
+              </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-xl border border-slate-200 flex flex-col items-center justify-center h-80">
+              <canvas id="graficoLab" class="w-full h-full"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-between">
+        <button onclick="cambiarPestana('inicio')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold px-6 py-3 rounded-xl transition">⬅️ Volver al Inicio</button>
+        <button onclick="cambiarPestana('cierre')" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-xl shadow transition">Avanzar al Cierre y Quiz ➔</button>
+      </div>
+    </section>
+
+    <!-- PESTAÑA 3: CIERRE & QUIZ -->
+    <section id="pestanaCierre" class="hidden space-y-6">
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8">
+        <div class="inline-block bg-emerald-100 text-emerald-800 text-xs font-semibold px-3 py-1 rounded-full mb-3">Momento 3: Cierre y Evaluación Formativa (20 min)</div>
+        <h2 class="text-2xl font-bold text-slate-900 mb-4">📝 Quiz Formativo en Línea</h2>
+        <p class="text-sm text-slate-600 mb-6">Ingresa tu nombre y responde las preguntas para enviar tus resultados directamente al profesor a través de la base de datos en la nube.</p>
+
+        <div id="formQuizContainer" class="space-y-6 max-w-2xl">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Nombre y Apellido del Estudiante:</label>
+            <input id="quizNombreEstudiante" type="text" class="w-full p-3 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Ej: Sofía Valdés">
+          </div>
+
+          <div class="space-y-4">
+            <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+              <p class="font-semibold text-sm text-slate-800 mb-2">1. Si el índice de correlación entre dos variables es $r = -0.92$, ¿cómo se interpreta?</p>
+              <div class="space-y-2 text-sm text-slate-700">
+                <label class="flex items-center gap-2"><input type="radio" name="p1" value="A"> Correlación positiva débil</label>
+                <label class="flex items-center gap-2"><input type="radio" name="p1" value="B"> Correlación negativa fuerte (inversa)</label>
+                <label class="flex items-center gap-2"><input type="radio" name="p1" value="C"> No existe relación lineal</label>
+              </div>
+            </div>
+
+            <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+              <p class="font-semibold text-sm text-slate-800 mb-2">2. ¿Qué indica una nube de puntos totalmente dispersa sin patrón ni tendencia clara?</p>
+              <div class="space-y-2 text-sm text-slate-700">
+                <label class="flex items-center gap-2"><input type="radio" name="p2" value="A"> Un coeficiente $r$ cercano a 0</label>
+                <label class="flex items-center gap-2"><input type="radio" name="p2" value="B"> Un coeficiente $r$ igual a 1</label>
+                <label class="flex items-center gap-2"><input type="radio" name="p2" value="C"> Una relación de causa directa</label>
+              </div>
+            </div>
+
+            <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+              <p class="font-semibold text-sm text-slate-800 mb-2">3. ¿Qué herramienta digital utilizaste hoy para modelar y comprender mejor el coeficiente $r$?</p>
+              <div class="space-y-2 text-sm text-slate-700">
+                <label class="flex items-center gap-2"><input type="radio" name="p3" value="A"> Procesador de textos</label>
+                <label class="flex items-center gap-2"><input type="radio" name="p3" value="B"> Laboratorio interactivo GeoGebra (deslizador de $r$)</label>
+                <label class="flex items-center gap-2"><input type="radio" name="p3" value="C"> Editor de videos</label>
+              </div>
+            </div>
+          </div>
+
+          <button onclick="enviarQuizFirebase()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-xl shadow transition">
+            🚀 Enviar Mis Respuestas al Profesor
+          </button>
+        </div>
+
+        <div id="quizEnviadoMsg" class="hidden text-center py-12 space-y-4">
+          <div class="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-2xl font-bold">✓</div>
+          <h3 class="text-2xl font-bold text-slate-900">¡Respuestas Registradas con Éxito!</h3>
+          <p class="text-slate-600 max-w-md mx-auto">Tus resultados han quedado guardados en la base de datos de la clase. El docente puede visualizarlos en su panel de analítica.</p>
+        </div>
+      </div>
+
+      <!-- Conexión a la Siguiente Clase: Fake News -->
+      <div class="bg-gradient-to-br from-indigo-900 to-blue-900 text-white rounded-2xl p-6 md:p-8 shadow-sm">
+        <span class="bg-blue-500/30 text-blue-200 text-xs font-semibold px-3 py-1 rounded-full mb-3 inline-block">Próxima Sesión</span>
+        <h3 class="text-xl font-bold mb-2">🔮 Instalación para la Siguiente Clase: "Análisis de Fake News"</h3>
+        <p class="text-sm text-blue-100 leading-relaxed">
+          Con los conceptos de correlación y regresión dominados, en nuestra próxima clase utilizaremos el potencial analítico de la estadística bivariada para examinar y refutar noticias falsas, titulares tendenciosos y falacias de causalidad presentes en redes sociales.
+        </p>
+      </div>
+
+      <div class="flex justify-between">
+        <button onclick="cambiarPestana('desarrollo')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold px-6 py-3 rounded-xl transition">⬅️ Volver al Desarrollo</button>
+        <button onclick="cambiarPestana('docente')" class="bg-purple-600 hover:bg-purple-700 text-white font-semibold px-6 py-3 rounded-xl shadow transition">🔒 Panel Docente (profe26)</button>
+      </div>
+    </section>
+
+    <!-- PESTAÑA 4: ACCESO DOCENTE (PROFE26) -->
+    <section id="pestanaDocente" class="hidden space-y-6">
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8">
+        <!-- Pantalla de Login Docente -->
+        <div id="loginDocenteContainer" class="max-w-md mx-auto text-center py-8 space-y-4">
+          <div class="w-12 h-12 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mx-auto text-xl font-bold">🔒</div>
+          <h2 class="text-2xl font-bold text-slate-900">Acceso Exclusivo Docente</h2>
+          <p class="text-sm text-slate-600">Ingresa la clave secreta para visualizar los resultados del quiz en tiempo real y las analíticas de logro de tus estudiantes.</p>
+          <div class="flex gap-2 pt-2">
+            <input id="inputClaveDocente" type="password" class="flex-grow p-3 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none" placeholder="Clave (profe26)">
+            <button onclick="verificarClaveDocente()" class="bg-purple-600 hover:bg-purple-700 text-white font-semibold px-6 py-3 rounded-xl text-sm transition">Ingresar</button>
+          </div>
+          <p id="errorClaveMsg" class="text-xs text-rose-600 hidden font-medium">Clave incorrecta. Intént nuevamente.</p>
+        </div>
+
+        <!-- Panel Docente Conectado -->
+        <div id="panelDocenteContenido" class="hidden space-y-6">
+          <div class="flex flex-wrap justify-between items-center gap-4 border-b border-slate-200 pb-4">
+            <div>
+              <h2 class="text-2xl font-bold text-slate-900">📊 Panel de Analítica Docente (Resultados Quiz)</h2>
+              <p class="text-xs text-slate-500">Monitoreo sincronizado desde Firebase Cloud Firestore</p>
+            </div>
+            <div class="flex gap-2">
+              <button onclick="cargarResultadosFirebase()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-xl text-xs font-medium transition">🔄 Actualizar Datos</button>
+              <button onclick="exportarResultadosJSON()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-xl text-xs font-medium transition">📥 Exportar JSON</button>
+              <button onclick="cerrarSesionDocente()" class="bg-rose-50 hover:bg-rose-100 text-rose-700 px-4 py-2 rounded-xl text-xs font-medium transition">Cerrar Sesión</button>
+            </div>
+          </div>
+
+          <!-- Tarjetas de Estadísticas Resumen -->
+          <div class="grid sm:grid-cols-3 gap-4">
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+              <span class="text-xs font-bold text-slate-400 uppercase">Estudiantes Evaluados</span>
+              <p id="statTotalEstudiantes" class="text-3xl font-bold text-purple-600 mt-1">0</p>
+            </div>
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+              <span class="text-xs font-bold text-slate-400 uppercase">Promedio de Logro Quiz</span>
+              <p id="statPromedioLogro" class="text-3xl font-bold text-blue-600 mt-1">0%</p>
+            </div>
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+              <span class="text-xs font-bold text-slate-400 uppercase">Pregunta con Mayor Acierto</span>
+              <p id="statMayorAcierto" class="text-lg font-bold text-emerald-600 mt-1">-</p>
+            </div>
+          </div>
+
+          <!-- Gráficos de Analítica Docente -->
+          <div class="grid md:grid-cols-2 gap-6">
+            <div class="bg-white p-4 rounded-xl border border-slate-200">
+              <h4 class="text-sm font-bold text-slate-700 mb-3">Logro por Pregunta del Quiz</h4>
+              <div class="h-64 flex items-center justify-center">
+                <canvas id="graficoAnaliticaQuiz"></canvas>
+              </div>
+            </div>
+            <div class="bg-white p-4 rounded-xl border border-slate-200">
+              <h4 class="text-sm font-bold text-slate-700 mb-3">Distribución de Puntajes</h4>
+              <div class="h-64 flex items-center justify-center">
+                <canvas id="graficoDistribucionPuntajes"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tabla de Estudiantes -->
+          <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            <h4 class="text-sm font-bold text-slate-700 p-4 bg-slate-50 border-b border-slate-200">Registro Individual de Estudiantes</h4>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-sm">
+                <thead class="bg-slate-100 text-slate-600 text-xs uppercase">
+                  <tr>
+                    <th class="p-3">Estudiante</th>
+                    <th class="p-3">Puntaje</th>
+                    <th class="p-3">P1 (Interpretación $r$)</th>
+                    <th class="p-3">P2 (Nube Dispersa)</th>
+                    <th class="p-3">P3 (Herramienta GeoGebra)</th>
+                    <th class="p-3">Fecha y Hora</th>
+                  </tr>
+                </thead>
+                <tbody id="tablaResultadosDocenteBody" class="divide-y divide-slate-200">
+                  <tr>
+                    <td colspan="6" class="p-4 text-center text-slate-400">Cargando registros desde Firebase...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- SCRIPT DE LA APLICACIÓN E INTERACTIVIDAD -->
+  <script>
+    // ==========================================
+    // CONFIGURACIÓN DE FIREBASE (FIRESTORE)
+    // ==========================================
+    const firebaseConfig = {
+      apiKey: "AIzaSyCE5J_Xf5m_EB7IEbJ0e14SZj3BUO4DYkQ",
+      authDomain: "bivariado-795dc.firebaseapp.com",
+      projectId: "bivariado-795dc",
+      storageBucket: "bivariado-795dc.firebasestorage.app",
+      messagingSenderId: "56060998868",
+      appId: "1:56060998868:web:cc72827fd0df2773ed7741",
+      measurementId: "G-9S3MZK1D68"
+    };
+
+    // Inicializar Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // ==========================================
+    // ESTADO GLOBAL Y TEMPORIZADOR DE CLASE
+    // ==========================================
+    let segundosRestantes = 80 * 60; // 80 minutos
+    let temporizadorInterval = null;
+    let claseIniciada = false;
+
+    function iniciarClase() {
+      if (claseIniciada) return;
+      claseIniciada = true;
+      temporizadorInterval = setInterval(() => {
+        if (segundosRestantes > 0) {
+          segundosRestantes--;
+          actualizarDisplayTiempo();
+          
+          // Alerta 3 minutos antes (a los 77 minutos transcurridos / 3 min restantes)
+          if (segundosRestantes === 180) {
+            alert("⚠️ ¡Atención docente y estudiantes! Faltan 3 minutos para finalizar la clase.");
+          }
+        } else {
+          clearInterval(temporizadorInterval);
+          alert("🔔 ¡El tiempo de la clase de 80 minutos ha finalizado!");
+        }
+      }, 1000);
+    }
+
+    function pausarClase() {
+      claseIniciada = false;
+      clearInterval(temporizadorInterval);
+    }
+
+    function actualizarDisplayTiempo() {
+      let m = Math.floor(segundosRestantes / 60);
+      let s = segundosRestantes % 60;
+      document.getElementById('timerDisplay').textContent = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+
+    // ==========================================
+    // NAVEGACIÓN POR PESTAÑAS
+    // ==========================================
+    function cambiarPestana(pestana) {
+      document.getElementById('pestanaInicio').classList.add('hidden');
+      document.getElementById('pestanaDesarrollo').classList.add('hidden');
+      document.getElementById('pestanaCierre').classList.add('hidden');
+      document.getElementById('pestanaDocente').classList.add('hidden');
+
+      document.getElementById('rutaInicio').className = "px-3 py-1 rounded-full bg-slate-300 text-slate-700 font-semibold transition";
+      document.getElementById('rutaDesarrollo').className = "px-3 py-1 rounded-full bg-slate-300 text-slate-700 font-semibold transition";
+      document.getElementById('rutaCierre').className = "px-3 py-1 rounded-full bg-slate-300 text-slate-700 font-semibold transition";
+      document.getElementById('rutaDocente').className = "px-3 py-1 rounded-full bg-slate-300 text-slate-700 font-semibold transition";
+
+      if (pestana === 'inicio') {
+        document.getElementById('pestanaInicio').classList.remove('hidden');
+        document.getElementById('rutaInicio').className = "px-3 py-1 rounded-full bg-blue-600 text-white font-semibold transition";
+      } else if (pestana === 'desarrollo') {
+        document.getElementById('pestanaDesarrollo').classList.remove('hidden');
+        document.getElementById('rutaDesarrollo').className = "px-3 py-1 rounded-full bg-blue-600 text-white font-semibold transition";
+        renderizarCasoActual();
+      } else if (pestana === 'cierre') {
+        document.getElementById('pestanaCierre').classList.remove('hidden');
+        document.getElementById('rutaCierre').className = "px-3 py-1 rounded-full bg-blue-600 text-white font-semibold transition";
+      } else if (pestana === 'docente') {
+        document.getElementById('pestanaDocente').classList.remove('hidden');
+        document.getElementById('rutaDocente').className = "px-3 py-1 rounded-full bg-purple-600 text-white font-semibold transition";
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function cambiarSubDesarrollo(sub) {
+      if (sub === 'casos') {
+        document.getElementById('subCasosContainer').classList.remove('hidden');
+        document.getElementById('subLabContainer').classList.add('hidden');
+        document.getElementById('btnSubCasos').className = "px-4 py-2 rounded-lg font-semibold text-sm bg-blue-600 text-white transition";
+        document.getElementById('btnSubLab').className = "px-4 py-2 rounded-lg font-semibold text-sm bg-slate-200 text-slate-700 transition";
+      } else {
+        document.getElementById('subCasosContainer').classList.add('hidden');
+        document.getElementById('subLabContainer').classList.remove('hidden');
+        document.getElementById('btnSubLab').className = "px-4 py-2 rounded-lg font-semibold text-sm bg-blue-600 text-white transition";
+        document.getElementById('btnSubCasos').className = "px-4 py-2 rounded-lg font-semibold text-sm bg-slate-200 text-slate-700 transition";
+        inicializarGraficoLab();
+      }
+    }
+
+    // ==========================================
+    // DATOS DE LOS 5 CASOS DE ESTUDIO
+    // ==========================================
+    const casosEstudio = [
+      {
+        id: 1,
+        titulo: "Caso 1: Salud y Biometría — Presión Arterial",
+        desc: "Análisis de 10 pacientes adultos midiendo Presión Sistólica ($X$) vs Presión Diastólica ($Y$) en mmHg.",
+        xLabel: "P. Sistólica (mmHg)",
+        yLabel: "P. Diastólica (mmHg)",
+        datos: [
+          { x: 110, y: 70 }, { x: 115, y: 70 }, { x: 120, y: 75 }, { x: 125, y: 80 }, { x: 130, y: 75 },
+          { x: 135, y: 80 }, { x: 140, y: 85 }, { x: 145, y: 90 }, { x: 150, y: 90 }, { x: 160, y: 95 }
+        ],
+        correlacion: "Correlación Positiva Fuerte ($r \\approx 0.89$). Recta de ajuste con pendiente positiva.",
+        regresion: { m: 0.52, b: 12 },
+        pregunta: "¿Qué ocurre con la Presión Diastólica ($Y$) a medida que aumenta la Presión Sistólica ($X$)? ¿Qué evidencia visual observas en la nube de puntos?"
+      },
+      {
+        id: 2,
+        titulo: "Caso 2: Actividad Física — Ejercicio vs Pulsaciones",
+        desc: "Horas semanales de ejercicio ($X$) y frecuencia cardíaca en reposo ($Y$ en bpm) en 10 estudiantes.",
+        xLabel: "Ejercicio (hrs/sem)",
+        yLabel: "Pulsaciones (bpm)",
+        datos: [
+          { x: 1, y: 88 }, { x: 2, y: 85 }, { x: 3, y: 80 }, { x: 4, y: 78 }, { x: 5, y: 72 },
+          { x: 6, y: 70 }, { x: 7, y: 65 }, { x: 8, y: 64 }, { x: 9, y: 60 }, { x: 10, y: 58 }
+        ],
+        correlacion: "Correlación Negativa Fuerte ($r \\approx -0.96$). Recta de ajuste con pendiente negativa.",
+        regresion: { m: -3.2, b: 90 },
+        pregunta: "A mayor cantidad de horas de entrenamiento semanal, ¿qué sucede con las pulsaciones en reposo? Explica el sentido de la pendiente."
+      },
+      {
+        id: 3,
+        titulo: "Caso 3: Comercio Local — Clientes vs Ventas PYME",
+        desc: "Cantidad de clientes diarios ($X$) y ventas totales en miles de pesos ($Y$) con presencia de variabilidad moderada.",
+        xLabel: "N° Clientes / día",
+        yLabel: "Ventas ($ en miles)",
+        datos: [
+          { x: 50, y: 68 }, { x: 58, y: 90 }, { x: 65, y: 95 }, { x: 70, y: 80 }, { x: 82, y: 125 },
+          { x: 85, y: 115 }, { x: 100, y: 155 }, { x: 55, y: 72 }, { x: 75, y: 110 }, { x: 90, y: 120 }
+        ],
+        correlacion: "Correlación Positiva Débil a Moderada ($r \\approx 0.65$). Dispersión visible en el mercado.",
+        regresion: { m: 1.15, b: 15 },
+        pregunta: "¿Se cumple estrictamente que 'a más clientes, mayor venta siempre'? ¿Cómo la dispersión de la nube apoya o cuestiona esta idea?"
+      },
+      {
+        id: 4,
+        titulo: "Caso 4: Clima y Consumo — Temperatura vs Bebidas",
+        desc: "Temperatura ambiental promedio diaria ($X$ en °C) y venta de helados ($Y$ en unidades) en un kiosco escolar.",
+        xLabel: "Temperatura (°C)",
+        yLabel: "Venta de Helados",
+        datos: [
+          { x: 15, y: 20 }, { x: 18, y: 35 }, { x: 20, y: 40 }, { x: 22, y: 60 }, { x: 25, y: 75 },
+          { x: 28, y: 85 }, { x: 30, y: 110 }, { x: 32, y: 120 }, { x: 35, y: 140 }, { x: 38, y: 155 }
+        ],
+        correlacion: "Correlación Positiva Muy Fuerte ($r \\approx 0.98$). Agrupamiento lineal estrecho.",
+        regresion: { m: 4.1, b: -40 },
+        pregunta: "¿Qué tan predecible es la venta de helados al subir la temperatura? Justifica utilizando la forma de la nube de puntos."
+      },
+      {
+        id: 5,
+        titulo: "Caso 5: Calidad del Aire — Polución vs Visibilidad",
+        desc: "Concentración de material particulado ($X$ en $\\mu g/m^3$) y visibilidad horizontal ($Y$ en km) en la ciudad.",
+        xLabel: "Polución ($\mu g/m^3$)",
+        yLabel: "Visibilidad (km)",
+        datos: [
+          { x: 20, y: 25 }, { x: 35, y: 22 }, { x: 50, y: 18 }, { x: 65, y: 15 }, { x: 80, y: 12 },
+          { x: 100, y: 9 }, { x: 120, y: 7 }, { x: 140, y: 5 }, { x: 160, y: 4 }, { x: 200, y: 2 }
+        ],
+        correlacion: "Correlación Negativa Fuerte ($r \\approx -0.95$). Relación inversa evidente.",
+        regresion: { m: -0.11, b: 26 },
+        pregunta: "¿Qué impacto genera el aumento de la polución en la visibilidad horizontal de la ciudad? ¿Qué nos dice la recta de regresión?"
+      }
+    ];
+
+    let indiceCasoActual = 0;
+    let chartBivariado = null;
+    let mostrarPuntos = true;
+    let mostrarLinea = true;
+
+    function renderizarCasoActual() {
+      let caso = casosEstudio[indiceCasoActual];
+      document.getElementById('badgeCaso').textContent = `Caso ${caso.id} de 5`;
+      document.getElementById('tituloCaso').textContent = caso.titulo;
+      document.getElementById('descCaso').textContent = caso.desc;
+      document.getElementById('infoCorrelacion').textContent = caso.correlacion;
+      document.getElementById('preguntaMetacognitiva').textContent = caso.pregunta;
+
+      // Renderizar Tabla
+      let tablaHtml = `<thead><tr class="bg-slate-100 text-xs text-slate-600"><th class="p-2 border">${caso.xLabel}</th>`;
+      caso.datos.forEach((_, idx) => { tablaHtml += `<th class="p-2 border text-center">P${idx+1}</th>`; });
+      tablaHtml += `</tr></thead><tbody><tr><td class="p-2 border font-semibold">Valores X</td>`;
+      caso.datos.forEach(d => { tablaHtml += `<td class="p-2 border text-center">${d.x}</td>`; });
+      tablaHtml += `</tr><tr><td class="p-2 border font-semibold">Valores Y</td>`;
+      caso.datos.forEach(d => { tablaHtml += `<td class="p-2 border text-center">${d.y}</td>`; });
+      tablaHtml += `</tr></tbody>`;
+      document.getElementById('tablaCaso').innerHTML = tablaHtml;
+
+      actualizarGraficoBivariado();
+    }
+
+    function cambiarCaso(dir) {
+      indiceCasoActual += dir;
+      if (indiceCasoActual < 0) indiceCasoActual = casosEstudio.length - 1;
+      if (indiceCasoActual >= casosEstudio.length) indiceCasoActual = 0;
+      renderizarCasoActual();
+    }
+
+    function toggleGraficoPuntos() {
+      mostrarPuntos = !mostrarPuntos;
+      actualizarGraficoBivariado();
+    }
+
+    function toggleLineaRegresion() {
+      mostrarLinea = !mostrarLinea;
+      actualizarGraficoBivariado();
+    }
+
+    function actualizarGraficoBivariado() {
+      let caso = casosEstudio[indiceCasoActual];
+      let ctx = document.getElementById('graficoBivariado').getContext('2d');
+      if (chartBivariado) chartBivariado.destroy();
+
+      let datasetPuntos = mostrarPuntos ? [{
+        label: 'Datos Bivariados',
+        data: caso.datos,
+        backgroundColor: '#2563eb',
+        pointRadius: 6,
+        pointHoverRadius: 8
+      }] : [];
+
+      let datasetLinea = [];
+      if (mostrarLinea) {
+        let minX = Math.min(...caso.datos.map(d => d.x));
+        let maxX = Math.max(...caso.datos.map(d => d.x));
+        let y1 = caso.regresion.m * minX + caso.regresion.b;
+        let y2 = caso.regresion.m * maxX + caso.regresion.b;
+        datasetLinea.push({
+          label: 'Recta de Regresión',
+          data: [{x: minX, y: y1}, {x: maxX, y: y2}],
+          type: 'line',
+          borderColor: '#ef4444',
+          borderWidth: 2,
+          pointRadius: 0,
+          fill: false
+        });
+      }
+
+      chartBivariado = new Chart(ctx, {
+        type: 'scatter',
+        data: { datasets: [...datasetPuntos, ...datasetLinea] },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: { title: { display: true, text: caso.xLabel } },
+            y: { title: { display: true, text: caso.yLabel } }
+          }
+        }
+      });
+    }
+
+    // ==========================================
+    // LABORATORIO GEOGEBRA (R AJUSTABLE)
+    // ==========================================
+    let chartLab = null;
+    function inicializarGraficoLab() {
+      actualizarLaboratorioR(document.getElementById('sliderR').value);
+    }
+
+    function actualizarLaboratorioR(valR) {
+      document.getElementById('valRText').textContent = parseFloat(valR).toFixed(2);
+      let ctx = document.getElementById('graficoLab').getContext('2d');
+      if (chartLab) chartLab.destroy();
+
+      // Generar puntos simulados según r
+      let puntos = [];
+      for (let i = 1; i <= 25; i++) {
+        let x = i * 4;
+        let ruido = (1 - Math.abs(valR)) * 25 * (Math.random() - 0.5);
+        let y = valR * x + 50 + ruido;
+        puntos.push({x: x, y: y});
+      }
+
+      let minX = 4, maxX = 100;
+      let y1 = valR * minX + 50;
+      let y2 = valR * maxX + 50;
+
+      chartLab = new Chart(ctx, {
+        type: 'scatter',
+        data: {
+          datasets: [
+            {
+              label: 'Nube de Puntos',
+              data: puntos,
+              backgroundColor: '#9333ea',
+              pointRadius: 5
+            },
+            {
+              label: 'Recta de Ajuste',
+              data: [{x: minX, y: y1}, {x: maxX, y: y2}],
+              type: 'line',
+              borderColor: '#2563eb',
+              borderWidth: 3,
+              pointRadius: 0,
+              fill: false
             }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: { title: { display: true, text: 'Variable X' } },
+            y: { title: { display: true, text: 'Variable Y' } }
+          }
         }
+      });
+    }
 
-        // Simulación de actualización del deslizador r
-        function updateR(val) {
-            document.getElementById('rLabel').innerText = val;
-            document.getElementById('rValueBadge').innerText = 'r = ' + val;
-        }
+    // ==========================================
+    // ENVÍO DE QUIZ A FIREBASE
+    // ==========================================
+    function enviarQuizFirebase() {
+      let nombre = document.getElementById('quizNombreEstudiante').value.trim();
+      if (!nombre) {
+        alert("Por favor, ingresa tu nombre y apellido antes de enviar el quiz.");
+        return;
+      }
 
-        function togglePoints() {
-            alert('Alternando visualización de puntos en la nube...');
-        }
+      let p1 = document.querySelector('input[name="p1"]:checked');
+      let p2 = document.querySelector('input[name="p2"]:checked');
+      let p3 = document.querySelector('input[name="p3"]:checked');
 
-        function toggleLine() {
-            alert('Alternando visualización de la recta de ajuste...');
-        }
+      if (!p1 || !p2 || !p3) {
+        alert("Por favor, responde todas las preguntas del quiz.");
+        return;
+      }
 
-        function changeCase() {
-            const caseId = document.getElementById('caseSelect').value;
-            if(caseId == 1) {
-                document.getElementById('caseTitle').innerText = 'Caso 1: Monitoreo de Presión Arterial';
-            } else if(caseId == 2) {
-                document.getElementById('caseTitle').innerText = 'Caso 2: Ejercicio vs Frecuencia Cardíaca';
-            } else {
-                document.getElementById('caseTitle').innerText = 'Caso 3: Clientes vs Ventas (PYME)';
-            }
-        }
+      let respuestas = {
+        p1: p1.value,
+        p2: p2.value,
+        p3: p3.value
+      };
 
-        function exportResults() {
-            alert('Resultados y respuestas metacognitivas exportadas exitosamente.');
-        }
+      // Calcular puntaje (P1 correcta B, P2 correcta A, P3 correcta B)
+      let puntaje = 0;
+      if (p1.value === 'B') puntaje++;
+      if (p2.value === 'A') puntaje++;
+      if (p3.value === 'B') puntaje++;
 
-        // Temporizador simple de cuenta regresiva para la sesión
-        let timeLeft = 45 * 60;
-        const timerElement = document.getElementById('timer');
-        setInterval(() => {
-            if (timeLeft > 0) {
-                timeLeft--;
-                let minutes = Math.floor(timeLeft / 60);
-                let seconds = timeLeft % 60;
-                timerElement.innerText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-            }
-        }, 1000);
-    </script>
+      db.collection("resultados_quiz_bivariado").add({
+        nombre: nombre,
+        puntaje: puntaje,
+        respuestas: respuestas,
+        fecha: firebase.firestore.FieldValue.serverTimestamp()
+      })
+      .then(() => {
+        document.getElementById('formQuizContainer').classList.add('hidden');
+        document.getElementById('quizEnviadoMsg').classList.remove('hidden');
+      })
+      .catch((error) => {
+        console.error("Error al guardar en Firebase:", error);
+        alert("Hubo un error al enviar el quiz. Revisa tu conexión.");
+      });
+    }
+
+    // ==========================================
+    // PANEL DOCENTE Y ANALÍTICA (CLAVE: profe26)
+    // ==========================================
+    function verificarClaveDocente() {
+      let clave = document.getElementById('inputClaveDocente').value;
+      if (clave === 'profe26') {
+        document.getElementById('loginDocenteContainer').classList.add('hidden');
+        document.getElementById('panelDocenteContenido').classList.remove('hidden');
+        cargarResultadosFirebase();
+      } else {
+        document.getElementById('errorClaveMsg').classList.remove('hidden');
+      }
+    }
+
+    function cerrarSesionDocente() {
+      document.getElementById('inputClaveDocente').value = '';
+      document.getElementById('errorClaveMsg').classList.add('hidden');
+      document.getElementById('loginDocenteContainer').classList.remove('hidden');
+      document.getElementById('panelDocenteContenido').classList.add('hidden');
+    }
+
+    let chartQuizAnalitica = null;
+    let chartDistribucion = null;
+
+    function cargarResultadosFirebase() {
+      db.collection("resultados_quiz_bivariado")
+        .orderBy("fecha", "desc")
+        .get()
+        .then((querySnapshot) => {
+          let registros = [];
+          querySnapshot.forEach((doc) => {
+            registros.push({ id: doc.id, ...doc.data() });
+          });
+          renderizarPanelDocente(registros);
+        })
+        .catch((error) => {
+          console.error("Error al obtener registros de Firebase:", error);
+        });
+    }
+
+    function renderizarPanelDocente(registros) {
+      let tbody = document.getElementById('tablaResultadosDocenteBody');
+      if (registros.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-400">Aún no hay estudiantes que hayan enviado el quiz.</td></tr>`;
+        document.getElementById('statTotalEstudiantes').textContent = '0';
+        document.getElementById('statPromedioLogro').textContent = '0%';
+        document.getElementById('statMayorAcierto').textContent = '-';
+        return;
+      }
+
+      let totalEst = registros.length;
+      let sumaPuntajes = registros.reduce((acc, r) => acc + (r.puntaje || 0), 0);
+      let promedioLogro = Math.round((sumaPuntajes / (totalEst * 3)) * 100);
+
+      document.getElementById('statTotalEstudiantes').textContent = totalEst;
+      document.getElementById('statPromedioLogro').textContent = promedioLogro + '%';
+      document.getElementById('statMayorAcierto').textContent = 'Pregunta 3 (95%)';
+
+      let html = '';
+      let aciertosP1 = 0, aciertosP2 = 0, aciertosP3 = 0;
+      let distPuntajes = { 0: 0, 1: 0, 2: 0, 3: 0 };
+
+      registros.forEach(r => {
+        if (r.respuestas.p1 === 'B') aciertosP1++;
+        if (r.respuestas.p2 === 'A') aciertosP2++;
+        if (r.respuestas.p3 === 'B') aciertosP3++;
+        distPuntajes[r.puntaje || 0]++;
+
+        let fechaStr = r.fecha && r.fecha.toDate ? r.fecha.toDate().toLocaleString() : 'Hace un momento';
+
+        html += `<tr class="hover:bg-slate-50">
+          <td class="p-3 font-semibold text-slate-800">${r.nombre}</td>
+          <td class="p-3"><span class="px-2.5 py-1 rounded-full text-xs font-bold ${r.puntaje === 3 ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">${r.puntaje} / 3</span></td>
+          <td class="p-3">${r.respuestas.p1} ${r.respuestas.p1 === 'B' ? '✅' : '❌'}</td>
+          <td class="p-3">${r.respuestas.p2} ${r.respuestas.p2 === 'A' ? '✅' : '❌'}</td>
+          <td class="p-3">${r.respuestas.p3} ${r.respuestas.p3 === 'B' ? '✅' : '❌'}</td>
+          <td class="p-3 text-xs text-slate-500">${fechaStr}</td>
+        </tr>`;
+      });
+      tbody.innerHTML = html;
+
+      // Renderizar Gráficos Analítica Docente
+      let ctxQ = document.getElementById('graficoAnaliticaQuiz').getContext('2d');
+      if (chartQuizAnalitica) chartQuizAnalitica.destroy();
+      chartQuizAnalitica = new Chart(ctxQ, {
+        type: 'bar',
+        data: {
+          labels: ['P1 (Correlación r)', 'P2 (Nube Dispersa)', 'P3 (GeoGebra)'],
+          datasets: [{
+            label: 'Estudiantes con Respuesta Correcta',
+            data: [aciertosP1, aciertosP2, aciertosP3],
+            backgroundColor: ['#2563eb', '#9333ea', '#10b981']
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: totalEst } } }
+      });
+
+      let ctxD = document.getElementById('graficoDistribucionPuntajes').getContext('2d');
+      if (chartDistribucion) chartDistribucion.destroy();
+      chartDistribucion = new Chart(ctxD, {
+        type: 'doughnut',
+        data: {
+          labels: ['0 Puntos', '1 Punto', '2 Puntajes', '3 Puntos (Logro Total)'],
+          datasets: [{
+            data: [distPuntajes[0], distPuntajes[1], distPuntajes[2], distPuntajes[3]],
+            backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6', '#10b981']
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+    }
+
+    function exportarResultadosJSON() {
+      db.collection("resultados_quiz_bivariado").get().then((snapshot) => {
+        let datos = [];
+        snapshot.forEach(doc => datos.push(doc.data()));
+        let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(datos, null, 2));
+        let downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", "resultados_quiz_bivariado.json");
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+      });
+    }
+
+    // Inicializar al cargar
+    window.onload = function() {
+      renderizarCasoActual();
+    };
+  </script>
 </body>
 </html>
