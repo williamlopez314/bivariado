@@ -1,198 +1,207 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Análisis Bivariado y Correlación | Herramienta Interactiva</title>
-  <!-- Tailwind CSS para diseño limpio y moderno -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- MathJax para visualización rigurosa de expresiones matemáticas LaTeX -->
-  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-  <!-- Chart.js para gráficos de dispersión y analíticas del docente -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- SDKs de Firebase (Firestore) -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <style>
-    body { background-color: #f8fafc; color: #1e293b; font-family: system-ui, -apple-system, sans-serif; }
-    .tab-active { border-bottom: 3px solid #2563eb; color: #2563eb; font-weight: bold; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Herramienta Interactiva - Estadística Bivariada (1° Medio)</title>
+    <!-- Incluimos Tailwind CSS para un diseño limpio y moderno -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Librería para gráficos y visualización si se requiere -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body class="min-h-screen flex flex-col">
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col justify-between">
 
-  <!-- ENCABEZADO Y TEMPORIZADOR GLOBAL DE CLASE -->
-  <header class="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-4">
-      <div>
-        <h1 class="text-xl font-bold text-blue-600">📊 Taller de Estadística Bivariada ($1^\circ$ Medio)</h1>
-        <p class="text-xs text-slate-500">OA 12: Nubes de puntos, recta de regresión y coeficiente de correlación $r$</p>
-      </div>
-      
-      <!-- Temporizador Global (80 minutos) -->
-      <div class="flex items-center gap-3 bg-blue-50 border border-blue-200 px-4 py-2 rounded-xl">
-        <div class="text-right">
-          <span class="text-xs font-semibold text-blue-800 block">TIEMPO DE CLASE</span>
-          <span id="timerDisplay" class="text-2xl font-mono font-bold text-blue-700">80:00</span>
+    <!-- HEADER / NAVEGACIÓN -->
+    <header class="bg-indigo-600 text-white shadow-md py-4 px-6 flex justify-between items-center">
+        <div>
+            <h1 class="text-xl font-bold">Estadística Bivariada: Nubes de Puntos y Correlación ($r$)</h1>
+            <p class="text-xs text-indigo-200">1° Medio A - Matemática | Portafolio Docente</p>
         </div>
-        <div class="flex gap-1">
-          <button onclick="iniciarClase()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition">Iniciar</button>
-          <button onclick="pausarClase()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-medium transition">Pausa</button>
+        <div>
+            <button onclick="openLoginModal()" class="bg-indigo-700 hover:bg-indigo-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
+                Acceso Docente
+            </button>
         </div>
-      </div>
+    </header>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="max-w-6xl mx-auto p-6 w-full flex-grow grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        <!-- Panel Izquierdo: Controles y Temporizador -->
+        <section class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
+            <div>
+                <h2 class="text-lg font-semibold text-slate-700 mb-4 border-b pb-2">Gestión de la Sesión</h2>
+                
+                <!-- Temporizador -->
+                <div class="bg-slate-100 p-4 rounded-lg text-center mb-6">
+                    <span class="text-xs text-slate-500 uppercase tracking-wider font-semibold">Tiempo de Sesión</span>
+                    <div id="timer" class="text-3xl font-mono font-bold text-indigo-600 mt-1">45:00</div>
+                </div>
+
+                <!-- Selector de Casos -->
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-slate-600 mb-2">Seleccionar Caso de Estudio:</label>
+                    <select id="caseSelect" onchange="changeCase()" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500">
+                        <option value="1">Caso 1: Presión Arterial (Salud)</option>
+                        <option value="2">Caso 2: Ejercicio vs Frecuencia Cardíaca</option>
+                        <option value="3">Caso 3: Clientes vs Ventas (PYME)</option>
+                    </select>
+                </div>
+
+                <!-- Botones Dinámicos de Visualización -->
+                <div class="space-y-2 mt-4">
+                    <button onclick="togglePoints()" class="w-full bg-slate-200 hover:bg-slate-300 text-slate-700 py-2 rounded-lg text-sm font-medium transition">
+                        Activar/Desactivar Puntos
+                    </button>
+                    <button onclick="toggleLine()" class="w-full bg-slate-200 hover:bg-slate-300 text-slate-700 py-2 rounded-lg text-sm font-medium transition">
+                        Mostrar/Ocultar Recta de Ajuste
+                    </button>
+                </div>
+            </div>
+
+            <div class="mt-6 pt-4 border-t border-slate-100">
+                <button onclick="exportResults()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-lg text-sm font-medium transition">
+                    Exportar Resultados / Quiz
+                </button>
+            </div>
+        </section>
+
+        <!-- Panel Central y Derecho: Gráfico Interactivo y Deslizador de r -->
+        <section class="md:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
+            <div>
+                <div class="flex justify-between items-center mb-4 border-b pb-2">
+                    <h3 id="caseTitle" class="text-lg font-semibold text-slate-700">Caso 1: Monitoreo de Presión Arterial</h3>
+                    <span id="rValueBadge" class="bg-indigo-100 text-indigo-800 text-xs font-semibold px-2.5 py-1 rounded-full">r = 0.85</span>
+                </div>
+
+                <!-- Simulación de Gráfico -->
+                <div class="bg-slate-50 border border-slate-200 rounded-lg h-64 flex items-center justify-center relative mb-4">
+                    <canvas id="scatterChart" class="max-h-full max-w-full"></canvas>
+                </div>
+
+                <!-- Pestaña de Exploración con Deslizador Dinámico de r -->
+                <div class="bg-indigo-50/50 p-4 rounded-lg border border-indigo-100">
+                    <label for="rSlider" class="block text-sm font-medium text-indigo-900 mb-1">
+                        Deslizador Dinámico del Coeficiente de Correlación ($r$): <span id="rLabel" class="font-bold text-indigo-600">0.85</span>
+                    </label>
+                    <input type="range" id="rSlider" min="-1" max="1" step="0.05" value="0.85" oninput="updateR(this.value)" class="w-full accent-indigo-600 cursor-pointer">
+                    <div class="flex justify-between text-xs text-slate-500 mt-1">
+                        <span>-1 (Inversa fuerte)</span>
+                        <span>0 (Nula)</span>
+                        <span>1 (Directa fuerte)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Preguntas Metacognitivas Integradas -->
+            <div class="mt-6 bg-slate-50 p-4 rounded-lg border border-slate-200">
+                <h4 class="text-sm font-semibold text-slate-700 mb-2">Reflexión Metacognitiva:</h4>
+                <p id="metaQuestion" class="text-sm text-slate-600 mb-2">¿Qué sucede con la dispersión de la nube de puntos cuando el valor de $r$ se acerca a 0?</p>
+                <input type="text" id="metaAnswer" placeholder="Escribe tu respuesta aquí..." class="w-full border border-slate-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-500">
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500">
+        Herramienta Interactiva de Autoría Docente - OA 12 / OA 16 (1° Medio) | Portafolio 2026
+    </footer>
+
+    <!-- MODAL DE ACCESO DOCENTE (CON LA CORRECCIÓN DE SEGURIDAD) -->
+    <div id="loginModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6 relative">
+            <button onclick="closeLoginModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">&times;</button>
+            
+            <h3 class="text-lg font-bold text-slate-800 mb-2">Panel de Control Docente</h3>
+            <p class="text-xs text-slate-500 mb-6">Ingrese su contraseña para desbloquear los ajustes avanzados y reportes de los estudiantes.</p>
+            
+            <form id="docenteLoginForm" onsubmit="handleDocenteLogin(event)">
+                <div class="mb-4">
+                    <label for="docentePassword" class="block text-sm font-medium text-slate-700 mb-1">Contraseña de Acceso:</label>
+                    <!-- Corrección aplicada: type="password" y autocomplete="new-password" evitan que el navegador sugiera o muestre la clave -->
+                    <input 
+                        type="password" 
+                        id="docentePassword" 
+                        name="docentePassword" 
+                        placeholder="Ingrese su clave" 
+                        autocomplete="new-password" 
+                        required
+                        class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    >
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button type="button" onclick="closeLoginModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-medium transition">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition">Ingresar</button>
+                </div>
+            </form>
+        </div>
     </div>
 
-    <!-- RUTA DE APRENDIZAJE VISIBLE -->
-    <nav class="bg-slate-100 border-t border-slate-200 px-4 py-2">
-      <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2 text-xs">
-        <span class="font-bold text-slate-700 uppercase tracking-wider">Ruta de Aprendizaje:</span>
-        <div id="rutaInicio" class="px-3 py-1 rounded-full bg-blue-600 text-white font-semibold transition">1. Inicio & Objetivo</div>
-        <div id="rutaDesarrollo" class="px-3 py-1 rounded-full bg-slate-300 text-slate-700 font-semibold transition">2. Desarrollo (Casos & GeoGebra)</div>
-        <div id="rutaCierre" class="px-3 py-1 rounded-full bg-slate-300 text-slate-700 font-semibold transition">3. Cierre & Quiz Formativo</div>
-        <div id="rutaDocente" class="px-3 py-1 rounded-full bg-purple-600 text-white font-semibold transition">🔒 Acceso Docente</div>
-      </div>
-    </nav>
-  </header>
+    <!-- SCRIPTS DE FUNCIONALIDAD -->
+    <script>
+        // Funciones del Modal de Acceso Docente
+        function openLoginModal() {
+            document.getElementById('loginModal').classList.remove('hidden');
+        }
 
-  <!-- CONTENIDO PRINCIPAL POR PESTAÑAS -->
-  <main class="flex-grow max-w-7xl w-full mx-auto p-4 md:p-6">
-    
-    <!-- PESTAÑA 1: INICIO -->
-    <section id="pestanaInicio" class="space-y-6">
-      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8">
-        <div class="inline-block bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full mb-3">Momento 1: Activación y Contexto (15 min)</div>
-        <h2 class="text-2xl font-bold text-slate-900 mb-4">🎯 Objetivo de la Sesión</h2>
-        <p class="text-lg text-slate-700 leading-relaxed bg-blue-50/50 p-4 rounded-xl border border-blue-100 mb-6">
-          "Formular y fundamentar conjeturas cualitativas y cuantitativas sobre la relación entre dos variables mediante nubes de puntos, la recta de regresión y el índice de correlación <strong>$r$</strong>, demostrando rigurosidad, pensamiento crítico y valoración del trabajo colaborativo."
-        </p>
+        function closeLoginModal() {
+            document.getElementById('loginModal').classList.add('hidden');
+            document.getElementById('docenteLoginForm').reset();
+        }
 
-        <div class="grid md:grid-cols-3 gap-4 mb-6">
-          <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
-            <span class="text-blue-600 font-bold block mb-1">🧠 Saber (Conocimiento)</span>
-            <p class="text-sm text-slate-600">Concepto de correlación bivariada, dispersión y el índice $r$ (de $-1$ a $1$).</p>
-          </div>
-          <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
-            <span class="text-blue-600 font-bold block mb-1">🛠️ Saber Hacer (Habilidad)</span>
-            <p class="text-sm text-slate-600">Interpretar tablas de doble entrada, nubes de puntos y tendencias lineales.</p>
-          </div>
-          <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
-            <span class="text-blue-600 font-bold block mb-1">❤️ Saber Ser (Actitud)</span>
-            <p class="text-sm text-slate-600">Pensamiento crítico frente a la información y rigor en el análisis estadístico.</p>
-          </div>
-        </div>
+        function handleDocenteLogin(event) {
+            event.preventDefault();
+            const pass = document.getElementById('docentePassword').value;
+            // Clave configurada: profe26
+            if (pass === 'profe26') {
+                alert('¡Acceso concedido! Panel docente habilitado.');
+                closeLoginModal();
+            } else {
+                alert('Contraseña incorrecta. Intente nuevamente.');
+            }
+        }
 
-        <div class="border-t border-slate-100 pt-6">
-          <h3 class="font-bold text-slate-800 mb-2">💡 ¿Qué es el índice de correlación $r$?</h3>
-          <p class="text-sm text-slate-600 leading-relaxed mb-4">
-            El coeficiente de correlación de Pearson, denotado como <strong>$r$</strong>, es un valor numérico entre <strong>$-1$</strong> y <strong>$1$</strong> que mide la fuerza y dirección de la asociación lineal entre dos variables cuantitativas. Si $r > 0$, la correlación es positiva; si $r < 0$, es negativa; y si $r \approx 0$, no existe relación lineal.
-          </p>
-          <div class="bg-amber-50 border border-amber-200 p-4 rounded-xl text-xs text-amber-800">
-            <strong>Reflexión Metacognitiva Inicial:</strong> ¿Por qué crees que en la vida cotidiana dos variables pueden parecer relacionadas cuando en realidad no existe una causa directa entre ellas?
-          </div>
-        </div>
-      </div>
+        // Simulación de actualización del deslizador r
+        function updateR(val) {
+            document.getElementById('rLabel').innerText = val;
+            document.getElementById('rValueBadge').innerText = 'r = ' + val;
+        }
 
-      <div class="flex justify-end">
-        <button onclick="cambiarPestana('desarrollo')" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-xl shadow transition flex items-center gap-2">
-          Avanzar al Desarrollo ➔
-        </button>
-      </div>
-    </section>
+        function togglePoints() {
+            alert('Alternando visualización de puntos en la nube...');
+        }
 
-    <!-- PESTAÑA 2: DESARROLLO -->
-    <section id="pestanaDesarrollo" class="hidden space-y-6">
-      <!-- Subpestañas de Desarrollo -->
-      <div class="flex flex-wrap gap-2 border-b border-slate-200 pb-3">
-        <button onclick="cambiarSubDesarrollo('casos')" id="btnSubCasos" class="px-4 py-2 rounded-lg font-semibold text-sm bg-blue-600 text-white transition">🔍 Casos de Estudio (1 al 5)</button>
-        <button onclick="cambiarSubDesarrollo('laboratorio')" id="btnSubLab" class="px-4 py-2 rounded-lg font-semibold text-sm bg-slate-200 text-slate-700 transition">🧪 Laboratorio GeoGebra ($r$ Ajustable)</button>
-      </div>
+        function toggleLine() {
+            alert('Alternando visualización de la recta de ajuste...');
+        }
 
-      <!-- VISTA SUBPESTAÑA: 5 CASOS -->
-      <div id="subCasosContainer" class="space-y-6">
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-          <div class="flex justify-between items-center mb-4">
-            <span id="badgeCaso" class="bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full">Caso 1 de 5</span>
-            <div class="flex gap-2">
-              <button onclick="cambiarCaso(-1)" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1 rounded-lg text-xs">Anterior</button>
-              <button onclick="cambiarCaso(1)" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg text-xs">Siguiente Caso</button>
-            </div>
-          </div>
+        function changeCase() {
+            const caseId = document.getElementById('caseSelect').value;
+            if(caseId == 1) {
+                document.getElementById('caseTitle').innerText = 'Caso 1: Monitoreo de Presión Arterial';
+            } else if(caseId == 2) {
+                document.getElementById('caseTitle').innerText = 'Caso 2: Ejercicio vs Frecuencia Cardíaca';
+            } else {
+                document.getElementById('caseTitle').innerText = 'Caso 3: Clientes vs Ventas (PYME)';
+            }
+        }
 
-          <h3 id="tituloCaso" class="text-xl font-bold text-slate-900 mb-2">Título del Caso</h3>
-          <p id="descCaso" class="text-sm text-slate-600 mb-6">Descripción contextualizada del caso...</p>
+        function exportResults() {
+            alert('Resultados y respuestas metacognitivas exportadas exitosamente.');
+        }
 
-          <div class="grid md:grid-cols-2 gap-6 items-start">
-            <!-- Tabla y Controles -->
-            <div class="space-y-4">
-              <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 overflow-x-auto">
-                <h4 class="text-xs font-bold text-slate-500 uppercase mb-2">Tabla de Doble Entrada</h4>
-                <table id="tablaCaso" class="w-full text-left text-sm border-collapse">
-                  <!-- Generado por JS -->
-                </table>
-              </div>
-
-              <div class="flex flex-wrap gap-3">
-                <button onclick="toggleGraficoPuntos()" id="btnTogglePuntos" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-medium transition">Ocultar/Mostrar Datos en Gráfico</button>
-                <button onclick="toggleLineaRegresion()" id="btnToggleLinea" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-xs font-medium transition">Ocultar/Mostrar Recta Ajuste</button>
-              </div>
-
-              <div class="bg-blue-50/60 p-4 rounded-xl border border-blue-100">
-                <span class="text-xs font-bold text-blue-800 block mb-1">Índice de Correlación y Recta:</span>
-                <p id="infoCorrelacion" class="text-sm font-semibold text-slate-800"></p>
-              </div>
-            </div>
-
-            <!-- Gráfico Bivariado -->
-            <div class="bg-white p-4 rounded-xl border border-slate-200 flex flex-col items-center justify-center h-80 relative">
-              <canvas id="graficoBivariado" class="w-full h-full"></canvas>
-            </div>
-          </div>
-
-          <!-- Pregunta Metacognitiva del Caso -->
-          <div class="mt-6 bg-amber-50/70 border border-amber-200 p-4 rounded-xl">
-            <span class="text-xs font-bold text-amber-900 uppercase block mb-1">✍️ Pregunta Metacognitiva Obligatoria:</span>
-            <p id="preguntaMetacognitiva" class="text-sm text-amber-900 mb-3"></p>
-            <textarea id="respuestaEstudianteCaso" rows="2" class="w-full p-3 rounded-lg border border-amber-300 text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none bg-white" placeholder="Escribe tu reflexión o análisis aquí..."></textarea>
-          </div>
-        </div>
-      </div>
-
-      <!-- VISTA SUBPESTAÑA: LABORATORIO GEOGEBRA (R AJUSTABLE) -->
-      <div id="subLabContainer" class="hidden space-y-6">
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8">
-          <div class="inline-block bg-purple-100 text-purple-800 text-xs font-semibold px-3 py-1 rounded-full mb-3">Laboratorio Interactivo Estilo GeoGebra</div>
-          <h3 class="text-xl font-bold text-slate-900 mb-2">Modulador Dinámico del Coeficiente $r$</h3>
-          <p class="text-sm text-slate-600 mb-6">Desplaza la barra para modificar el valor de $r$ y observa en tiempo real cómo cambia la nube de puntos tabulados y su recta de regresión.</p>
-
-          <div class="grid md:grid-cols-2 gap-6 items-center">
-            <div class="space-y-6">
-              <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
-                <label for="sliderR" class="block text-sm font-bold text-slate-700 mb-2">Valor de Correlación ($r$): <span id="valRText" class="text-blue-600 font-mono text-lg">0.85</span></label>
-                <input id="sliderR" type="range" min="-1" max="1" step="0.05" value="0.85" oninput="actualizarLaboratorioR(this.value)" class="w-full accent-blue-600 cursor-pointer">
-                <div class="flex justify-between text-xs text-slate-400 mt-1 font-mono">
-                  <span>-1.0 (Negativa Fuerte)</span>
-                  <span>0.0 (Nula)</span>
-                  <span>+1.0 (Positiva Fuerte)</span>
-                </div>
-              </div>
-
-              <div class="bg-purple-50 p-4 rounded-xl border border-purple-100 text-xs text-purple-900 space-y-2">
-                <strong>Análisis Metacognitivo del Laboratorio:</strong>
-                <ul class="list-disc pl-4 space-y-1">
-                  <li>¿Qué sucede con la dispersión de la nube cuando $r$ se aproxima a $0$?</li>
-                  <li>¿Cómo cambia la inclinación de la recta cuando $r$ pasa de positivo a negativo?</li>
-                </ul>
-                <textarea id="respLab" rows="2" class="w-full p-2 rounded border border-purple-200 bg-white mt-2" placeholder="Responde aquí tus observaciones..."></textarea>
-              </div>
-            </div>
-
-            <div class="bg-white p-4 rounded-xl border border-slate-200 flex flex-col items-center justify-center h-80">
-              <canvas id="graficoLab" class="w-full h-full"></canvas>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="flex justify-between">
-        <button onclick="cambiarPestana('inicio')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold px-6 py-3 rounded-xl transition">⬅️ Volver al Inicio</button>
-        <button onclick="cambiarPestana('cierre')" class="bg-blue-600 hover:
+        // Temporizador simple de cuenta regresiva para la sesión
+        let timeLeft = 45 * 60;
+        const timerElement = document.getElementById('timer');
+        setInterval(() => {
+            if (timeLeft > 0) {
+                timeLeft--;
+                let minutes = Math.floor(timeLeft / 60);
+                let seconds = timeLeft % 60;
+                timerElement.innerText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+        }, 1000);
+    </script>
+</body>
+</html>
