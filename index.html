@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Laboratorio Estadístico Bivariado | 1° Medio</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- MathJax for rigorous LaTeX formatting -->
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <!-- Chart.js for interactive scatter plots -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            brand: {
+              50: '#f0fdf4',
+              100: '#dcfce7',
+              200: '#bbf7d0',
+              500: '#22c55e',
+              600: '#16a34a',
+              700: '#15803d',
+              800: '#166534',
+              900: '#14532d',
+            },
+            skysoft: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              500: '#0ea5e9',
+              600: '#0284c7',
+              700: '#0369a1'
+            },
+            sunshine: {
+              50: '#fefce8',
+              100: '#fef9c3',
+              500: '#eab308',
+              600: '#ca8a04'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; }
+    .tab-transition { transition: all 0.25s ease-in-out; }
+  </style>
+</head>
+<body class="h-full flex flex-col justify-between selection:bg-brand-500 selection:text-white">
+
+  <!-- APP CONTAINER -->
+  <div class="flex flex-col min-h-screen">
+
+    <!-- HEADER / NAVIGATION & TIMELINE -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+      <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col md:flex-row justify-between items-center gap-4">
+        
+        <!-- Title & Badge -->
+        <div class="flex items-center gap-3">
+          <div class="bg-brand-600 text-white p-2.5 rounded-2xl shadow-md">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+          </div>
+          <div>
+            <h1 class="text-base md:text-lg font-bold text-slate-900">Laboratorio Estadístico Bivariado</h1>
+            <p class="text-xs text-slate-500">1° Medio • Enfoque Inclusivo PIE & Metacognición Activa</p>
+          </div>
+        </div>
+
+        <!-- GLOBAL TIMER & CLASS CONTROL -->
+        <div class="flex items-center gap-3 bg-slate-50 border border-slate-200 px-4 py-2 rounded-2xl shadow-inner">
+          <div class="text-left">
+            <span class="block text-[10px] uppercase tracking-wider font-bold text-slate-400">Temporizador de Clase (80 min)</span>
+            <span id="global-timer" class="text-xl font-mono font-bold text-brand-700">80:00</span>
+          </div>
+          <div class="flex gap-2">
+            <button id="btn-start-class" onclick="startClassTimer()" class="bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold px-3.5 py-2 rounded-xl shadow transition">Iniciar Clase</button>
+            <button onclick="pauseClassTimer()" class="bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold px-3.5 py-2 rounded-xl shadow transition">Pausar</button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- MAIN TABS (INICIO, DESARROLLO, CIERRE, DOCENTE) -->
+      <div class="bg-slate-100 border-t border-slate-200 px-4">
+        <div class="max-w-7xl mx-auto flex space-x-2 overflow-x-auto py-2">
+          <button onclick="switchMainTab('inicio')" id="tab-btn-inicio" class="main-tab px-4 py-2.5 rounded-xl text-sm font-semibold text-brand-800 bg-white shadow-sm flex items-center gap-2 border border-slate-200">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> 1. Inicio (15 min)
+          </button>
+          <button onclick="switchMainTab('desarrollo')" id="tab-btn-desarrollo" class="main-tab px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-white/60 flex items-center gap-2">
+            <span id="dev-dot" class="w-2.5 h-2.5 rounded-full bg-slate-300"></span> 2. Desarrollo & Casos (50 min)
+          </button>
+          <button onclick="switchMainTab('cierre')" id="tab-btn-cierre" class="main-tab px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-white/60 flex items-center gap-2">
+            <span id="close-dot" class="w-2.5 h-2.5 rounded-full bg-slate-300"></span> 3. Cierre & Quiz (15 min)
+          </button>
+          <button onclick="switchMainTab('docente')" id="tab-btn-docente" class="main-tab px-4 py-2.5 rounded-xl text-sm font-semibold text-skysoft-700 bg-skysoft-50 hover:bg-skysoft-100 flex items-center gap-2 border border-skysoft-200">
+            🔒 4. Acceso Docente
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- NOTIFICATION BANNER -->
+    <div id="notification-banner" class="hidden bg-sunshine-50 border-b border-sunshine-100 text-sunshine-800 px-4 py-2.5 text-center text-sm font-medium transition-all shadow-sm">
+      ⚠️ <span id="notification-text">Aviso del sistema de tiempo.</span>
+    </div>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 py-6">
+
+      <!-- ==================== TAB 1: INICIO ==================== -->
+      <section id="tab-inicio" class="space-y-6">
+        
+        <!-- LEARNING ROUTE (ALWAYS VISIBLE & HIGHLIGHTED) -->
+        <div class="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Ruta de Aprendizaje Activa (Apoyo PIE)</h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="p-4 rounded-2xl border-2 border-brand-500 bg-brand-50/60 relative shadow-sm">
+              <span class="absolute -top-3 left-4 bg-brand-600 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full">ETAPA ACTUAL</span>
+              <h4 class="font-bold text-brand-900 text-sm mt-1">1. Activación & Marco Conceptual</h4>
+              <p class="text-xs text-slate-600 mt-1">Propósito, objetivo tridimensional y concepto fundamental de correlación \(r\).</p>
+            </div>
+            <div class="p-4 rounded-2xl border border-slate-200 bg-slate-50 opacity-75">
+              <h4 class="font-bold text-slate-800 text-sm">2. Exploración de Casos & Deslizador \(r\)</h4>
+              <p class="text-xs text-slate-500 mt-1">Análisis de 5 escenarios bivariados y laboratorio dinámico GeoGebra.</p>
+            </div>
+            <div class="p-4 rounded-2xl border border-slate-200 bg-slate-50 opacity-75">
+              <h4 class="font-bold text-slate-800 text-sm">3. Síntesis, Quiz & Fake News</h4>
+              <p class="text-xs text-slate-500 mt-1">Evaluación formativa individual y preparación para desinformación.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- OBJECTIVE CARD -->
+        <div class="bg-gradient-to-br from-brand-700 to-brand-900 text-white rounded-3xl p-6 shadow-md relative overflow-hidden">
+          <div class="relative z-10">
+            <span class="bg-white/25 backdrop-blur text-white text-xs font-semibold px-3.5 py-1 rounded-full uppercase tracking-wider">Objetivo de la Sesión</span>
+            <h2 class="text-xl md:text-2xl font-bold mt-3 leading-snug">
+              Analizar y contrastar el grado de asociación y la recta de ajuste en datos bivariados mediante herramientas interactivas, manifestando autonomía, rigor científico y pensamiento crítico.
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 pt-6 border-t border-white/20 text-xs">
+              <div class="bg-white/10 backdrop-blur p-3.5 rounded-2xl border border-white/10">
+                <span class="block font-bold text-brand-100 mb-1">🎯 Saber (Conceptual)</span>
+                Comprender variable bivariada, nube de puntos \((x_i, y_i)\), recta de regresión \(y = mx + n\) e índice de correlación \(r\).
+              </div>
+              <div class="bg-white/10 backdrop-blur p-3.5 rounded-2xl border border-white/10">
+                <span class="block font-bold text-brand-100 mb-1">🛠️ Saber Hacer (Procedimental)</span>
+                Manipular gráficos de dispersión, activar modelos de ajuste y evaluar tendencias con precisión geométrica.
+              </div>
+              <div class="bg-white/10 backdrop-blur p-3.5 rounded-2xl border border-white/10">
+                <span class="block font-bold text-brand-100 mb-1">💡 Saber Ser (Actitudinal)</span>
+                Desarrollar rigor analítico, gestión del tiempo y escepticismo constructivo ante afirmaciones tendenciosas.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CONCEPT INTRO: WHAT IS R? -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm flex flex-col justify-between">
+            <div>
+              <div class="flex items-center gap-3 mb-3">
+                <div class="bg-skysoft-100 text-skysoft-700 px-3 py-1.5 rounded-xl font-bold text-xs">Índice \(r\)</div>
+                <h3 class="font-bold text-slate-900 text-sm">¿Qué es el Coeficiente de Correlación de Pearson (\(r\))?</h3>
+              </div>
+              <p class="text-xs text-slate-600 leading-relaxed">
+                El coeficiente \(r\) es un valor numérico acotado en el intervalo \([-1, 1]\) que mide la fuerza y dirección de la relación lineal entre dos variables aleatorias \(X\) e \(Y\):
+              </p>
+              <ul class="text-xs text-slate-700 mt-3 space-y-2">
+                <li class="flex items-start gap-2">🌱 <strong>\(r \approx 1\):</strong> Correlación positiva fuerte (crecimiento conjunto).</li>
+                <li class="flex items-start gap-2">🍁 <strong>\(r \approx -1\):</strong> Correlación negativa fuerte (relación inversa).</li>
+                <li class="flex items-start gap-2">🍃 <strong>\(r \approx 0\):</strong> Ausencia de correlación lineal (nube desordenada).</li>
+              </ul>
+            </div>
+            <div class="mt-6 pt-4 border-t border-slate-100 bg-sunshine-50 p-3.5 rounded-2xl border border-sunshine-100 text-xs text-sunshine-800">
+              ⚠️ <strong>Metacognición:</strong> Una alta correlación estadística (\(r^2\) elevado) <em>no implica</em> causalidad directa. ¡Cuidado con las falacias de asociación!
+            </div>
+          </div>
+
+          <!-- METACOGNITION ACTIVATION BOX -->
+          <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm flex flex-col justify-between">
+            <div>
+              <span class="text-[10px] font-bold uppercase tracking-wider text-brand-600 bg-brand-50 px-2.5 py-1 rounded-full">Reflexión Inicial</span>
+              <h3 class="font-bold text-slate-900 text-sm mt-2 mb-2">Pregunta Metacognitiva de Apertura</h3>
+              <p class="text-xs text-slate-600 mb-3">Antes de empezar con los casos interactivos, responde individualmente:</p>
+              <label class="block text-xs font-medium text-slate-700 mb-1">¿Cómo imaginas que se vería en un plano cartesiano \((X, Y)\) la relación entre las horas de estudio y las notas de un examen?</label>
+              <textarea id="meta-inicio-input" rows="3" class="w-full text-xs p-3.5 border border-slate-300 rounded-2xl focus:ring-2 focus:ring-brand-500 focus:outline-none bg-slate-50/50" placeholder="Escribe tu hipótesis aquí..."></textarea>
+            </div>
+            <button onclick="saveMetaInicio()" class="mt-4 bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold py-3 px-4 rounded-2xl shadow transition">Registrar Reflexión Inicial</button>
+          </div>
+        </div>
+
+      </section>
+
+
+      <!-- ==================== TAB 2: DESARROLLO & CASOS ==================== -->
+      <section id="tab-desarrollo" class="hidden space-y-6">
+        
+        <!-- LEARNING ROUTE -->
+        <div class="bg-white border border-slate-200 rounded-3xl p-4 shadow-sm">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="p-3 rounded-2xl border border-slate-200 bg-slate-50 opacity-75">
+              <h4 class="font-bold text-slate-700 text-xs">1. Activación & Marco Conceptual</h4>
+            </div>
+            <div class="p-3 rounded-2xl border-2 border-brand-500 bg-brand-50/60 relative">
+              <span class="absolute -top-2.5 left-4 bg-brand-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">ETAPA ACTUAL</span>
+              <h4 class="font-bold text-brand-900 text-xs">2. Exploración de Casos & Deslizador \(r\)</h4>
+            </div>
+            <div class="p-3 rounded-2xl border border-slate-200 bg-slate-50 opacity-75">
+              <h4 class="font-bold text-slate-700 text-xs">3. Síntesis, Quiz & Fake News</h4>
+            </div>
+          </div>
+        </div>
+
+        <!-- SUBTABS FOR CASES AND SIMULATOR -->
+        <div class="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm">
+          <div class="flex flex-wrap gap-2 border-b border-slate-200 pb-4">
+            <button onclick="switchCaseTab(1)" id="case-btn-1" class="case-subtab px-3.5 py-2 rounded-xl text-xs font-semibold bg-brand-600 text-white shadow">Caso 1 (+ Fuerte)</button>
+            <button onclick="switchCaseTab(2)" id="case-btn-2" class="case-subtab px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200">Caso 2 (- Fuerte)</button>
+            <button onclick="switchCaseTab(3)" id="case-btn-3" class="case-subtab px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200">Caso 3 (Débil / Nula)</button>
+            <button onclick="switchCaseTab(4)" id="case-btn-4" class="case-subtab px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200">Caso 4 (Causalidad Contextual)</button>
+            <button onclick="switchCaseTab(5)" id="case-btn-5" class="case-subtab px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200">Caso 5 (Moderada)</button>
+            <button onclick="switchCaseTab(6)" id="case-btn-6" class="case-subtab px-3.5 py-2 rounded-xl text-xs font-semibold bg-skysoft-100 text-skysoft-700 hover:bg-skysoft-200">🔬 Laboratorio GeoGebra r</button>
+          </div>
+
+          <!-- CASE CONTENT AREA -->
+          <div id="case-content-area" class="mt-6">
+            <!-- Dynamically rendered via JS -->
+          </div>
+        </div>
+
+      </section>
+
+
+      <!-- ==================== TAB 3: CIERRE & QUIZ ==================== -->
+      <section id="tab-cierre" class="hidden space-y-6">
+        
+        <!-- LEARNING ROUTE -->
+        <div class="bg-white border border-slate-200 rounded-3xl p-4 shadow-sm">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="p-3 rounded-2xl border border-slate-200 bg-slate-50 opacity-75">
+              <h4 class="font-bold text-slate-700 text-xs">1. Activación & Marco Conceptual</h4>
+            </div>
+            <div class="p-3 rounded-2xl border border-slate-200 bg-slate-50 opacity-75">
+              <h4 class="font-bold text-slate-700 text-xs">2. Exploración de Casos & Deslizador \(r\)</h4>
+            </div>
+            <div class="p-3 rounded-2xl border-2 border-brand-500 bg-brand-50/60 relative">
+              <span class="absolute -top-2.5 left-4 bg-brand-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">ETAPA ACTUAL</span>
+              <h4 class="font-bold text-brand-900 text-xs">3. Síntesis, Quiz & Fake News</h4>
+            </div>
+          </div>
+        </div>
+
+        <!-- QUIZ CONTAINER -->
+        <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm max-w-3xl mx-auto">
+          <div class="border-b border-slate-200 pb-4 mb-6">
+            <span class="bg-brand-100 text-brand-800 text-xs font-semibold px-3 py-1 rounded-full">Evaluación Formativa Interactiva</span>
+            <h2 class="text-xl font-bold text-slate-900 mt-2">Quiz de Consolidación Bivariada</h2>
+            <p class="text-xs text-slate-500">Ingresa tu nombre completo para registrar tu progreso y ver los resultados en la base de datos docente.</p>
+          </div>
+
+          <div id="quiz-form-box" class="space-y-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1">Nombre Completo del Estudiante</label>
+                <input type="text" id="student-name" class="w-full text-xs p-3.5 border border-slate-300 rounded-2xl focus:ring-2 focus:ring-brand-500 focus:outline-none bg-slate-50/50" placeholder="Ej. Antonia Pérez">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1">Curso</label>
+                <input type="text" id="student-class" value="1° Medio A" readonly class="w-full text-xs p-3.5 bg-slate-100 border border-slate-200 rounded-2xl text-slate-500">
+              </div>
+            </div>
+
+            <!-- Q1 -->
+            <div class="p-4.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+              <p class="text-xs font-bold text-slate-900">1. Si el coeficiente de correlación de Pearson es \(r = -0.92\), ¿cuál de las siguientes afirmaciones es correcta?</p>
+              <div class="space-y-2 text-xs">
+                <label class="flex items-center gap-2 cursor-pointer p-2 rounded-xl hover:bg-white transition"><input type="radio" name="q1" value="A"> Existe una relación negativa débil y desordenada sin tendencia.</label>
+                <label class="flex items-center gap-2 cursor-pointer p-2 rounded-xl hover:bg-white transition"><input type="radio" name="q1" value="B"> Existe una fuerte asociación lineal negativa; al aumentar \(X\), la variable \(Y\) disminuye marcadamente.</label>
+                <label class="flex items-center gap-2 cursor-pointer p-2 rounded-xl hover:bg-white transition"><input type="radio" name="q1" value="C"> No hay relación lineal posible entre ambas variables.</label>
+              </div>
+            </div>
+
+            <!-- Q2 -->
+            <div class="p-4.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+              <p class="text-xs font-bold text-slate-900">2. ¿Qué significa que un titular de prensa presente una alta correlación estadística entre dos variables?</p>
+              <div class="space-y-2 text-xs">
+                <label class="flex items-center gap-2 cursor-pointer p-2 rounded-xl hover:bg-white transition"><input type="radio" name="q2" value="A"> Que una variable es indiscutiblemente la causa directa y única de la otra.</label>
+                <label class="flex items-center gap-2 cursor-pointer p-2 rounded-xl hover:bg-white transition"><input type="radio" name="q2" value="B"> Que las variables están asociadas linealmente, pero se debe analizar si existe causalidad real o variables intervinientes (evitar fake news).</label>
+                <label class="flex items-center gap-2 cursor-pointer p-2 rounded-xl hover:bg-white transition"><input type="radio" name="q2" value="C"> Que los datos tabulados están incorrectos.</label>
+              </div>
+            </div>
+
+            <!-- Q3 -->
+            <div class="p-4.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+              <p class="text-xs font-bold text-slate-900">3. Metacognición: ¿Cuál fue la mayor dificultad que superaste al analizar la nube de puntos y cómo la resolviste?</p>
+              <textarea id="quiz-meta" rows="3" class="w-full text-xs p-3.5 border border-slate-300 rounded-2xl focus:ring-2 focus:ring-brand-500 focus:outline-none bg-white" placeholder="Explica tu proceso reflexivo..."></textarea>
+            </div>
+
+            <button onclick="submitQuiz()" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs py-3.5 rounded-2xl shadow transition">Enviar Quiz & Registrar en Sistema</button>
+          </div>
+
+          <!-- QUIZ SUCCESS MESSAGE -->
+          <div id="quiz-results-box" class="hidden space-y-6 text-center py-8">
+            <div class="bg-brand-50 border border-brand-200 p-6 rounded-3xl max-w-lg mx-auto">
+              <div class="text-3xl mb-2">🎉</div>
+              <h3 class="font-bold text-brand-900 text-base">¡Quiz Enviado Correctamente!</h3>
+              <p class="text-xs text-brand-700 mt-2">Tus respuestas y reflexión metacognitiva han sido almacenadas en la base de datos. El docente puede revisar los resultados en su panel exclusivo.</p>
+              <button onclick="resetQuizView()" class="mt-6 bg-brand-600 text-white text-xs font-semibold py-2 px-4 rounded-xl">Enviar otra respuesta</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- FAKE NEWS INSTALLATION CARD -->
+        <div class="bg-gradient-to-r from-skysoft-700 to-brand-800 text-white rounded-3xl p-6 shadow-md max-w-3xl mx-auto">
+          <span class="bg-white/25 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">Próxima Sesión (Clase 3)</span>
+          <h4 class="font-bold text-sm mt-3">Instalación para la Siguiente Clase: "Analistas vs. Fake News"</h4>
+          <p class="text-xs text-skysoft-100 mt-2 leading-relaxed">
+            Con los resultados de este quiz, la próxima sesión aplicaremos el poder analítico del coeficiente \(r\) y las nubes de puntos para desmantelar titulares tendenciosos en medios masivos y redes sociales. ¡Estás listo para ejercer una ciudadanía crítica e informada!
+          </p>
+        </div>
+
+      </section>
+
+
+      <!-- ==================== TAB 4: ACCESO DOCENTE ==================== -->
+      <section id="tab-docente" class="hidden space-y-6 max-w-5xl mx-auto">
+        
+        <!-- PASSWORD LOCK SCREEN -->
+        <div id="docente-lock" class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm text-center max-w-md mx-auto my-12">
+          <div class="bg-skysoft-100 text-skysoft-700 w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4 font-bold text-lg">🔒</div>
+          <h3 class="text-base font-bold text-slate-900">Área Exclusiva Docente</h3>
+          <p class="text-xs text-slate-500 mt-1 mb-6">Ingresa la clave de acceso del profesor para visualizar analíticas, puntajes y respuestas del curso.</p>
+          
+          <div class="space-y-4">
+            <input type="password" id="docente-pass-input" placeholder="Clave de acceso (profe26)" class="w-full text-xs p-3.5 border border-slate-300 rounded-2xl focus:ring-2 focus:ring-skysoft-500 focus:outline-none text-center">
+            <button onclick="verifyTeacherLogin()" class="w-full bg-skysoft-600 hover:bg-skysoft-700 text-white font-semibold text-xs py-3 rounded-2xl shadow transition">Acceder al Panel</button>
+            <p id="login-error" class="text-xs text-rose-500 hidden font-medium">Clave incorrecta. Intenta nuevamente (profe26).</p>
+          </div>
+        </div>
+
+        <!-- TEACHER DASHBOARD (UNLOCKED) -->
+        <div id="docente-dashboard" class="hidden space-y-6">
+          
+          <!-- TOP STATS -->
+          <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white border border-slate-200 p-5 rounded-3xl shadow-sm">
+            <div>
+              <span class="bg-brand-100 text-brand-800 text-[10px] font-bold px-3 py-1 rounded-full uppercase">Panel de Control Docente</span>
+              <h2 class="text-lg font-bold text-slate-900 mt-1">Analítica de Resultados - 1° Medio A</h2>
+              <p class="text-xs text-slate-500">Monitoreo en tiempo real del Quiz y respuestas metacognitivas.</p>
+            </div>
+            <div class="flex gap-2">
+              <button onclick="exportTeacherDataJSON()" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold py-2.5 px-4 rounded-xl shadow transition">Exportar Datos a JSON</button>
+              <button onclick="lockTeacherPanel()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold py-2.5 px-4 rounded-xl transition">Bloquear Panel</button>
+            </div>
+          </div>
+
+          <!-- ANALYTICS CARDS -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="bg-white border border-slate-200 p-5 rounded-3xl shadow-sm">
+              <span class="block text-[10px] text-slate-400 uppercase font-bold">Estudiantes Evaluados</span>
+              <span id="doc-stat-total" class="text-2xl font-bold text-slate-900 mt-1 block">5</span>
+            </div>
+            <div class="bg-white border border-slate-200 p-5 rounded-3xl shadow-sm">
+              <span class="block text-[10px] text-slate-400 uppercase font-bold">Logro Promedio P1 (\(r\))</span>
+              <span id="doc-stat-q1" class="text-2xl font-bold text-brand-600 mt-1 block">85%</span>
+            </div>
+            <div class="bg-white border border-slate-200 p-5 rounded-3xl shadow-sm">
+              <span class="block text-[10px] text-slate-400 uppercase font-bold">Logro Promedio P2 (Causalidad)</span>
+              <span id="doc-stat-q2" class="text-2xl font-bold text-skysoft-600 mt-1 block">80%</span>
+            </div>
+          </div>
+
+          <!-- CHARTS & BREAKDOWN -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-white border border-slate-200 p-5 rounded-3xl shadow-sm flex flex-col items-center">
+              <h4 class="font-bold text-xs text-slate-800 mb-4 self-start uppercase tracking-wider">Logro por Pregunta (Objetivos)</h4>
+              <div class="w-full h-64 relative">
+                <canvas id="teacherChart"></canvas>
+              </div>
+            </div>
+
+            <div class="bg-white border border-slate-200 p-5 rounded-3xl shadow-sm flex flex-col justify-between">
+              <div>
+                <h4 class="font-bold text-xs text-slate-800 mb-3 uppercase tracking-wider">Síntesis Metacognitiva del Curso</h4>
+                <p class="text-xs text-slate-600 leading-relaxed mb-3">
+                  El análisis de las reflexiones escritas muestra que el <strong>75% de los estudiantes</strong> identificó con éxito que la principal dificultad inicial fue distinguir entre la fuerte asociación lineal (pendiente) y la relación de causa directa.
+                </p>
+                <div class="bg-brand-50 border border-brand-200 p-3.5 rounded-2xl text-xs text-brand-900">
+                  💡 <strong>Recomendación para la Clase 3:</strong> Enfatizar el contraejemplo de correlaciones espurias para consolidar el pensamiento crítico frente a las noticias falsas.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- STUDENTS TABLE -->
+          <div class="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm overflow-hidden">
+            <h4 class="font-bold text-xs text-slate-800 mb-4 uppercase tracking-wider">Registro Detallado por Estudiante</h4>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead>
+                  <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold">
+                    <th class="p-3">Estudiante</th>
+                    <th class="p-3">Curso</th>
+                    <th class="p-3 text-center">Pregunta 1 (\(r\))</th>
+                    <th class="p-3 text-center">Pregunta 2 (Causalidad)</th>
+                    <th class="p-3">Reflexión Metacognitiva</th>
+                  </tr>
+                </thead>
+                <tbody id="students-table-body" class="divide-y divide-slate-100">
+                  <!-- Populated via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-white border-t border-slate-200 py-4 mt-12 text-center text-xs text-slate-500">
+      <p>Plataforma Interactiva Docente • Evaluación Docente 2026 • Adaptación curricular DUA & PIE</p>
+    </footer>
+
+  </div>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    // --- GLOBAL TIMER STATE ---
+    let totalSeconds = 80 * 60; // 80 minutes
+    let timerInterval = null;
+    let timerRunning = false;
+
+    function startClassTimer() {
+      if (timerRunning) return;
+      timerRunning = true;
+      document.getElementById('btn-start-class').innerText = 'En curso...';
+      document.getElementById('btn-start-class').classList.remove('bg-brand-600', 'hover:bg-brand-700');
+      document.getElementById('btn-start-class').classList.add('bg-slate-400');
+
+      timerInterval = setInterval(() => {
+        if (totalSeconds > 0) {
+          totalSeconds--;
+          updateTimerDisplay();
+          checkTimeNotifications();
+        } else {
+          clearInterval(timerInterval);
+          showNotification("¡La clase ha finalizado oficialmente!");
+        }
+      }, 1000);
+    }
+
+    function pauseClassTimer() {
+      timerRunning = false;
+      clearInterval(timerInterval);
+      document.getElementById('btn-start-class').innerText = 'Reanudar Clase';
+      document.getElementById('btn-start-class').classList.remove('bg-slate-400');
+      document.getElementById('btn-start-class').classList.add('bg-brand-600', 'hover:bg-brand-700');
+    }
+
+    function updateTimerDisplay() {
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+      document.getElementById('global-timer').innerText = 
+        `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }
+
+    function checkTimeNotifications() {
+      if (totalSeconds === 3 * 60) {
+        showNotification("⚠️ Quedan 3 minutos para cerrar la etapa actual de la sesión.");
+      }
+      if (totalSeconds === 56 * 60) {
+        document.getElementById('dev-dot').classList.remove('bg-slate-300');
+        document.getElementById('dev-dot').classList.add('bg-skysoft-500');
+        showNotification("🔓 ¡70% del tiempo cumplido! Se habilitan las siguientes etapas de profundización.");
+      }
+    }
+
+    function showNotification(msg) {
+      const banner = document.getElementById('notification-banner');
+      const text = document.getElementById('notification-text');
+      text.innerText = msg;
+      banner.classList.remove('hidden');
+      setTimeout(() => banner.classList.add('hidden'), 6000);
+    }
+
+    // --- MAIN TAB SWITCHER ---
+    function switchMainTab(tabId) {
+      document.querySelectorAll('main > section').forEach(sec => sec.classList.add('hidden'));
+      document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+
+      document.querySelectorAll('.main-tab').forEach(btn => {
+        btn.classList.remove('bg-white', 'shadow-sm', 'text-brand-800', 'border', 'border-slate-200');
+        btn.classList.add('text-slate-600');
+      });
+      const activeBtn = document.getElementById(`tab-btn-${tabId}`);
+      if (tabId === 'docente') {
+        activeBtn.classList.add('bg-skysoft-100', 'text-skysoft-800', 'border', 'border-skysoft-300');
+      } else {
+        activeBtn.classList.add('bg-white', 'shadow-sm', 'text-brand-800', 'border', 'border-slate-200');
+        activeBtn.classList.remove('text-slate-600');
+      }
+
+      if (window.MathJax) MathJax.typesetPromise();
+    }
+
+    // --- QUIZ & STORAGE STATE ---
+    let studentSubmissions = [
+      {name: "Matías Soto", grade: "1° Medio A", q1: "Correcta (B)", q2: "Correcta (B)", meta: "Me costó entender por qué r alto no es causa directa."},
+      {name: "Antonia Pérez", grade: "1° Medio A", q1: "Correcta (B)", q2: "Correcta (B)", meta: "Usé el deslizador para ver cómo se alineaban los puntos."},
+      {name: "Benjamín Silva", grade: "1° Medio A", q1: "Incorrecta (A)", q2: "Correcta (B)", meta: "Comprendí la diferencia entre correlación fuerte y débil."},
+      {name: "Sofía Valenzuela", grade: "1° Medio A", q1: "Correcta (B)", q2: "Incorrecta (A)", meta: "Analizar el gráfico de helados me aclaró las variables."},
+      {name: "Lucas Morales", grade: "1° Medio A", q1: "Correcta (B)", q2: "Correcta (B)", meta: "Pude relacionar el coeficiente r con las noticias falsas."}
+    ];
+
+    function saveMetaInicio() {
+      const val = document.getElementById('meta-inicio-input').value;
+      if (!val.trim()) {
+        alert("Por favor escribe tu reflexión antes de registrar.");
+        return;
+      }
+      showNotification("✨ Reflexión inicial registrada correctamente.");
+    }
+
+    function submitQuiz() {
+      const name = document.getElementById('student-name').value;
+      const q1Val = document.querySelector('input[name="q1"]:checked');
+      const q2Val = document.querySelector('input[name="q2"]:checked');
+      const metaVal = document.getElementById('quiz-meta').value;
+
+      if (!name.trim()) {
+        alert("Por favor ingresa tu nombre completo.");
+        return;
+      }
+      if (!q1Val || !q2Val) {
+        alert("Por favor responde todas las preguntas del quiz.");
+        return;
+      }
+
+      // Add to simulated DB
+      studentSubmissions.push({
+        name: name,
+        grade: "1° Medio A",
+        q1: q1Val.value === 'B' ? "Correcta (B)" : "Incorrecta ("+q1Val.value+")",
+        q2: q2Val.value === 'B' ? "Correcta (B)" : "Incorrecta ("+q2Val.value+")",
+        meta: metaVal.trim() || "Sin observaciones."
+      });
+
+      document.getElementById('quiz-form-box').classList.add('hidden');
+      document.getElementById('quiz-results-box').classList.remove('hidden');
+      showNotification("✅ Quiz enviado con éxito a la base de datos.");
+      updateTeacherDashboardData();
+    }
+
+    function resetQuizView() {
+      document.getElementById('quiz-form-box').classList.remove('hidden');
+      document.getElementById('quiz-results-box').classList.add('hidden');
+      document.getElementById('student-name').value = '';
+      document.getElementById('quiz-meta').value = '';
+      document.querySelectorAll('input[type="radio"]').forEach(r => r.checked = false);
+    }
+
+    // --- TEACHER LOGIN & PANEL ---
+    function verifyTeacherLogin() {
+      const pass = document.getElementById('docente-pass-input').value;
+      if (pass === 'profe26') {
+        document.getElementById('docente-lock').classList.add('hidden');
+        document.getElementById('docente-dashboard').classList.remove('hidden');
+        updateTeacherDashboardData();
+        showNotification("🔓 Acceso docente autorizado.");
+      } else {
+        document.getElementById('login-error').classList.remove('hidden');
+      }
+    }
+
+    function lockTeacherPanel() {
+      document.getElementById('docente-lock').classList.remove('hidden');
+      document.getElementById('docente-dashboard').classList.add('hidden');
+      document.getElementById('docente-pass-input').value = '';
+      document.getElementById('login-error').classList.add('hidden');
+    }
+
+    let teacherChartInstance = null;
+    function updateTeacherDashboardData() {
+      const total = studentSubmissions.length;
+      const q1Correct = studentSubmissions.filter(s => s.q1.includes('Correcta')).length;
+      const q2Correct = studentSubmissions.filter(s => s.q2.includes('Correcta')).length;
+
+      document.getElementById('doc-stat-total').innerText = total;
+      const p1Pct = Math.round((q1Correct / total) * 100);
+      const p2Pct = Math.round((q2Correct / total) * 100);
+      document.getElementById('doc-stat-q1').innerText = p1Pct + '%';
+      document.getElementById('doc-stat-q2').innerText = p2Pct + '%';
+
+      // Populate table
+      const tbody = document.getElementById('students-table-body');
+      tbody.innerHTML = '';
+      studentSubmissions.forEach(s => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50 transition";
+        tr.innerHTML = `
+          <td class="p-3 font-medium text-slate-900">${s.name}</td>
+          <td class="p-3 text-slate-500">${s.grade}</td>
+          <td class="p-3 text-center"><span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${s.q1.includes('Correcta') ? 'bg-brand-100 text-brand-800' : 'bg-rose-100 text-rose-800'}">${s.q1}</span></td>
+          <td class="p-3 text-center"><span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${s.q2.includes('Correcta') ? 'bg-skysoft-100 text-skysoft-800' : 'bg-rose-100 text-rose-800'}">${s.q2}</span></td>
+          <td class="p-3 text-slate-600 italic">"${s.meta}"</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      // Render Teacher Chart
+      const ctx = document.getElementById('teacherChart').getContext('2d');
+      if (teacherChartInstance) teacherChartInstance.destroy();
+
+      teacherChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Pregunta 1 (Índice r)', 'Pregunta 2 (Causalidad)'],
+          datasets: [{
+            label: '% de Logro del Curso',
+            data: [p1Pct, p2Pct],
+            backgroundColor: ['#22c55e', '#0ea5e9'],
+            borderRadius: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { beginAtZero: true, max: 100, grid: { color: '#f1f5f9' } },
+            x: { grid: { display: false } }
+          },
+          plugins: { legend: { display: false } }
+        }
+      });
+    }
+
+    function exportTeacherDataJSON() {
+      const payload = {
+        evaluacion: "Laboratorio Estadístico Bivariado",
+        curso: "1° Medio A",
+        timestamp: new Date().toISOString(),
+        resultados: studentSubmissions
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], {type: 'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'analitica_quiz_bivariado_1medio.json';
+      a.click();
+      showNotification("📥 Datos exportados correctamente en formato JSON.");
+    }
+
+    // --- CASE DATA & RENDERER ---
+    const casesData = {
+      1: {
+        title: "Caso 1: Horas de Estudio vs. Calificación en Examen",
+        type: "Correlación Positiva Fuerte",
+        rValue: "r = 0.88",
+        desc: "Se registra el tiempo dedicado al estudio autónomo (\(X\) en horas) y la nota obtenida (\(Y\) de 1.0 a 7.0) en un curso de 1° Medio.",
+        data: [{x: 1, y: 3.5}, {x: 2, y: 4.0}, {x: 2.5, y: 4.2}, {x: 3.5, y: 5.0}, {x: 4, y: 5.5}, {x: 5, y: 5.8}, {x: 6, y: 6.5}, {x: 7, y: 6.8}],
+        metaQ: "¿Qué sucede con la nota \(Y\) cuando aumentan las horas de estudio \(X\)? ¿Por qué la nube de puntos se alinea en forma ascendente?"
+      },
+      2: {
+        title: "Caso 2: Uso Diario de Pantallas vs. Horas de Sueño",
+        type: "Correlación Negativa Fuerte",
+        rValue: "r = -0.84",
+        desc: "Análisis del tiempo frente a pantallas digitales por noche (\(X\)) y las horas de descanso nocturno (\(Y\)) de los estudiantes.",
+        data: [{x: 1, y: 8.5}, {x: 2, y: 8.0}, {x: 3, y: 7.2}, {x: 4, y: 6.5}, {x: 5, y: 5.5}, {x: 6, y: 4.8}, {x: 7, y: 4.0}],
+        metaQ: "Identifica la pendiente de la recta de regresión \(y = mx + n\). Si \(X\) aumenta, ¿qué ocurre estrictamente con \(Y\)?"
+      },
+      3: {
+        title: "Caso 3: Estatura vs. Calificación en Matemática",
+        type: "Correlación Débil / Nula",
+        rValue: "r = 0.05",
+        desc: "Comparación entre la altura corporal de los alumnos (\(X\) en cm) y su promedio en la asignatura de Matemática (\(Y\)).",
+        data: [{x: 150, y: 5.0}, {x: 155, y: 4.2}, {x: 160, y: 6.5}, {x: 162, y: 5.5}, {x: 168, y: 4.8}, {x: 172, y: 6.0}, {x: 175, y: 5.2}],
+        metaQ: "¿Por qué decimos que los puntos \((x_i, y_i)\) están dispersos sin formar una tendencia clara? ¿Qué nos dice un valor de \(r\) cercano a \(0\)?"
+      },
+      4: {
+        title: "Caso 4: Temperatura Ambiental vs. Venta de Helados",
+        type: "Correlación Fuerte con Causalidad Contextual",
+        rValue: "r = 0.91",
+        desc: "Relación entre la temperatura exterior (\(X\) en °C) y la cantidad de helados vendidos (\(Y\)) en el quiosco escolar.",
+        data: [{x: 15, y: 20}, {x: 18, y: 35}, {x: 22, y: 50}, {x: 25, y: 75}, {x: 28, y: 95}, {x: 32, y: 120}],
+        metaQ: "¿Existe una relación causa-efecto directa entre la temperatura y el helado, o interviene una tercera variable estacional (verano)?"
+      },
+      5: {
+        title: "Caso 5: Gasto Publicitario vs. Ventas de un Emprendimiento",
+        type: "Correlación Positiva Moderada",
+        rValue: "r = 0.65",
+        desc: "Estudio del presupuesto invertido en redes sociales (\(X\) en miles) y el retorno en ventas totales (\(Y\)) de una PYME escolar.",
+        data: [{x: 10, y: 15}, {x: 20, y: 22}, {x: 30, y: 28}, {x: 40, y: 35}, {x: 50, y: 42}, {x: 60, y: 50}],
+        metaQ: "¿Cómo evaluarías la efectividad de la inversión a partir de la inclinación de la recta de ajuste y la dispersión observada?"
+      }
+    };
+
+    let activeChart = null;
+    let showPoints = true;
+    let showLine = true;
+
+    function switchCaseTab(caseNum) {
+      document.querySelectorAll('.case-subtab').forEach(btn => {
+        btn.classList.remove('bg-brand-600', 'text-white', 'shadow', 'bg-skysoft-100', 'text-skysoft-700');
+        btn.classList.add('bg-slate-100', 'text-slate-600');
+      });
+      const btn = document.getElementById(`case-btn-${caseNum}`);
+      if (caseNum === 6) {
+        btn.classList.add('bg-skysoft-100', 'text-skysoft-700');
+        renderInteractiveLab();
+      } else {
+        btn.classList.add('bg-brand-600', 'text-white', 'shadow');
+        renderCase(caseNum);
+      }
+      if (window.MathJax) MathJax.typesetPromise();
+    }
+
+    function renderCase(num) {
+      const c = casesData[num];
+      const container = document.getElementById('case-content-area');
+      container.innerHTML = `
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div class="lg:col-span-1 space-y-4">
+            <div class="bg-slate-50 p-4.5 rounded-2xl border border-slate-200">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-brand-700 bg-brand-100 px-2.5 py-1 rounded-full">${c.type}</span>
+              <h3 class="font-bold text-slate-900 text-sm mt-2">${c.title}</h3>
+              <p class="text-xs text-slate-600 mt-1.5 leading-relaxed">${c.desc}</p>
+              <div class="mt-4 pt-3 border-t border-slate-200 flex justify-between items-center text-xs">
+                <span class="font-bold text-slate-700">Coeficiente de Correlación:</span>
+                <span class="font-mono font-bold text-brand-700 bg-white px-2.5 py-1 rounded-xl border border-slate-200">\\(${c.rValue}\\)</span>
+              </div>
+            </div>
+
+            <!-- TOGGLE CONTROLS -->
+            <div class="bg-white p-4.5 rounded-2xl border border-slate-200 space-y-3 shadow-sm">
+              <h4 class="font-bold text-xs text-slate-800">Controles de Visualización GeoGebra</h4>
+              <div class="flex gap-2">
+                <button onclick="togglePoints()" id="btn-toggle-pts" class="flex-1 text-xs py-2.5 px-3 rounded-xl font-semibold bg-brand-600 text-white transition shadow-sm">Ocultar Puntos</button>
+                <button onclick="toggleLine()" id="btn-toggle-line" class="flex-1 text-xs py-2.5 px-3 rounded-xl font-semibold bg-skysoft-600 text-white transition shadow-sm">Ocultar Recta</button>
+              </div>
+            </div>
+
+            <!-- METACOGNITIVE PROMPT -->
+            <div class="bg-sunshine-50 border border-sunshine-100 p-4.5 rounded-2xl space-y-2 shadow-sm">
+              <h4 class="font-bold text-xs text-sunshine-800 flex items-center gap-1.5">🧠 Pregunta Metacognitiva</h4>
+              <p class="text-xs text-slate-700 leading-relaxed">${c.metaQ}</p>
+              <textarea rows="2" class="w-full text-xs p-2.5 border border-sunshine-200 rounded-xl bg-white focus:outline-none focus:ring-1 focus:ring-sunshine-500" placeholder="Escribe tu reflexión..."></textarea>
+            </div>
+          </div>
+
+          <!-- CHART CANVAS AREA -->
+          <div class="lg:col-span-2 bg-white p-5 rounded-2xl border border-slate-200 flex flex-col justify-center items-center relative min-h-[385px] shadow-sm">
+            <canvas id="caseChart" class="w-full max-h-[340px]"></canvas>
+          </div>
+        </div>
+      `;
+      drawCaseChart(c.data);
+      if (window.MathJax) MathJax.typesetPromise();
+    }
+
+    function drawCaseChart(rawData) {
+      const ctx = document.getElementById('caseChart').getContext('2d');
+      if (activeChart) activeChart.destroy();
+
+      let chartData = showPoints ? rawData : [];
+      
+      let datasets = [{
+        label: 'Nube de Puntos (x_i, y_i)',
+        data: chartData,
+        backgroundColor: '#16a34a',
+        pointRadius: 6,
+        pointHoverRadius: 8,
+        type: 'scatter'
+      }];
+
+      if (showLine && rawData.length > 0) {
+        const xVals = rawData.map(d => d.x);
+        const yVals = rawData.map(d => d.y);
+        const minX = Math.min(...xVals);
+        const maxX = Math.max(...xVals);
+        const minY = Math.min(...yVals);
+        const maxY = Math.max(...yVals);
+        
+        datasets.push({
+          label: 'Recta de Regresión Lineal y = mx + n',
+          data: [{x: minX, y: minY}, {x: maxX, y: maxY}],
+          type: 'line',
+          borderColor: '#0284c7',
+          borderWidth: 3,
+          pointRadius: 0,
+          fill: false
+        });
+      }
+
+      activeChart = new Chart(ctx, {
+        data: { datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: { type: 'linear', position: 'bottom', grid: { color: '#f1f5f9' } },
+            y: { grid: { color: '#f1f5f9' } }
+          }
+        }
+      });
+    }
+
+    function togglePoints() {
+      showPoints = !showPoints;
+      const btn = document.getElementById('btn-toggle-pts');
+      btn.innerText = showPoints ? "Ocultar Puntos" : "Mostrar Puntos";
+      btn.className = showPoints ? "flex-1 text-xs py-2.5 px-3 rounded-xl font-semibold bg-brand-600 text-white transition shadow-sm" : "flex-1 text-xs py-2.5 px-3 rounded-xl font-semibold bg-slate-300 text-slate-700 transition shadow-sm";
+      const activeBtn = document.querySelector('.case-subtab.bg-brand-600');
+      if (activeBtn) {
+        const num = activeBtn.id.replace('case-btn-', '');
+        drawCaseChart(casesData[num].data);
+      }
+    }
+
+    function toggleLine() {
+      showLine = !showLine;
+      const btn = document.getElementById('btn-toggle-line');
+      btn.innerText = showLine ? "Ocultar Recta" : "Mostrar Recta";
+      btn.className = showLine ? "flex-1 text-xs py-2.5 px-3 rounded-xl font-semibold bg-skysoft-600 text-white transition shadow-sm" : "flex-1 text-xs py-2.5 px-3 rounded-xl font-semibold bg-slate-300 text-slate-700 transition shadow-sm";
+      const activeBtn = document.querySelector('.case-subtab.bg-brand-600');
+      if (activeBtn) {
+        const num = activeBtn.id.replace('case-btn-', '');
+        drawCaseChart(casesData[num].data);
+      }
+    }
+
+    // --- LABORATORY DYNAMIC r SIMULATOR (GEOGEBRA STYLE) ---
+    function renderInteractiveLab() {
+      const container = document.getElementById('case-content-area');
+      container.innerHTML = `
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div class="lg:col-span-1 space-y-4">
+            <div class="bg-skysoft-50 p-4.5 rounded-2xl border border-skysoft-100">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-skysoft-700 bg-skysoft-100 px-2.5 py-1 rounded-full">Laboratorio GeoGebra Style</span>
+              <h3 class="font-bold text-slate-900 text-sm mt-2">Deslizador Dinámico de Correlación (\(r\))</h3>
+              <p class="text-xs text-slate-600 mt-1.5 leading-relaxed">Mueve el deslizador para alterar el valor de \(r\) y observa en tiempo real cómo se comporta la nube de puntos y la recta de ajuste \(y = mx + n\).</p>
+            </div>
+
+            <!-- SLIDER CONTROL -->
+            <div class="bg-white p-4.5 rounded-2xl border border-slate-200 space-y-3 shadow-sm">
+              <div class="flex justify-between items-center text-xs">
+                <span class="font-bold text-slate-700">Valor de \(r\):</span>
+                <span id="r-slider-val" class="font-mono font-bold text-skysoft-600 text-sm">0.80</span>
+              </div>
+              <input type="range" id="r-slider" min="-1" max="1" step="0.05" value="0.80" oninput="updateLabSimulation(this.value)" class="w-full accent-skysoft-600 cursor-pointer">
+              <div class="flex justify-between text-[10px] text-slate-400 font-mono">
+                <span>-1.0 (Negativa)</span>
+                <span>0.0 (Nula)</span>
+                <span>+1.0 (Positiva)</span>
+              </div>
+            </div>
+
+            <!-- METACOGNITION LAB -->
+            <div class="bg-sunshine-50 border border-sunshine-100 p-4.5 rounded-2xl space-y-2 shadow-sm">
+              <h4 class="font-bold text-xs text-sunshine-800 flex items-center gap-1.5">🧠 Pregunta Metacognitiva</h4>
+              <p class="text-xs text-slate-700 leading-relaxed">¿Qué rango de \(r\) hace que la nube de puntos se aproxime a una línea recta perfecta y cuándo se desorganiza en una nube sin patrón?</p>
+              <textarea rows="2" class="w-full text-xs p-2.5 border border-sunshine-200 rounded-xl bg-white focus:outline-none focus:ring-1 focus:ring-sunshine-500" placeholder="Escribe tu conclusión..."></textarea>
+            </div>
+          </div>
+
+          <!-- LAB CHART AREA -->
+          <div class="lg:col-span-2 bg-white p-5 rounded-2xl border border-slate-200 flex flex-col justify-center items-center relative min-h-[385px] shadow-sm">
+            <canvas id="labChart" class="w-full max-h-[340px]"></canvas>
+          </div>
+        </div>
+      `;
+      updateLabSimulation(0.80);
+      if (window.MathJax) MathJax.typesetPromise();
+    }
+
+    let labChart = null;
+    function updateLabSimulation(rVal) {
+      document.getElementById('r-slider-val').innerText = parseFloat(rVal).toFixed(2);
+      
+      let points = [];
+      const n = 28;
+      for (let i = 0; i < n; i++) {
+        let x = i * (10 / n);
+        let noise = (Math.random() - 0.5) * (2 - Math.abs(rVal) * 1.8) * 4;
+        let y = rVal * x * 2 + 10 + noise;
+        points.push({x: parseFloat(x.toFixed(2)), y: parseFloat(y.toFixed(2))});
+      }
+
+      const ctx = document.getElementById('labChart').getContext('2d');
+      if (labChart) labChart.destroy();
+
+      const minX = 0, maxX = 10;
+      const minY = rVal * minX * 2 + 10;
+      const maxY = rVal * maxX * 2 + 10;
+
+      labChart = new Chart(ctx, {
+        data: {
+          datasets: [
+            {
+              label: 'Nube Dinámica (x_i, y_i)',
+              data: points,
+              backgroundColor: '#0ea5e9',
+              pointRadius: 5,
+              type: 'scatter'
+            },
+            {
+              label: 'Recta de Regresión y = mx + n',
+              data: [{x: minX, y: minY}, {x: maxX, y: maxY}],
+              type: 'line',
+              borderColor: '#eab308',
+              borderWidth: 3,
+              pointRadius: 0,
+              fill: false
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: { type: 'linear', position: 'bottom', grid: { color: '#f1f5f9' } },
+            y: { grid: { color: '#f1f5f9' } }
+          }
+        }
+      });
+    }
+
+    window.onload = function() {
+      updateTimerDisplay();
+      renderCase(1);
+      if (window.MathJax) MathJax.typesetPromise();
+    };
+  </script>
+</body>
+</html>
