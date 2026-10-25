@@ -333,7 +333,7 @@
       <!-- ==================== TAB 4: ACCESO DOCENTE ==================== -->
       <section id="tab-docente" class="hidden space-y-6 max-w-5xl mx-auto">
         
-        <!-- PASSWORD LOCK SCREEN (CORREGIDO PARA SEGURIDAD: type="password" y autocomplete="new-password") -->
+        <!-- PASSWORD LOCK SCREEN (PROTEGIDO CONTRA MIRADAS Y AUTOCOMPLETADO) -->
         <div id="docente-lock" class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm text-center max-w-md mx-auto my-12">
           <div class="bg-skysoft-100 text-skysoft-700 w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4 font-bold text-lg">🔒</div>
           <h3 class="text-base font-bold text-slate-900">Área Exclusiva Docente</h3>
@@ -727,4 +727,247 @@
         title: "Caso 5: Gasto Publicitario vs. Ventas de un Emprendimiento",
         type: "Correlación Positiva Moderada",
         rValue: "r = 0.65",
-        desc: "Estudio del presupuesto invertido en redes sociales (\(X\) en
+        desc: "Estudio del presupuesto invertido en redes sociales (\(X\) en miles) y el retorno en ventas totales (\(Y\)) de una PYME escolar.",
+        data: [{x: 10, y: 15}, {x: 20, y: 22}, {x: 30, y: 28}, {x: 40, y: 35}, {x: 50, y: 42}, {x: 60, y: 50}],
+        metaQ: "¿Cómo evaluarías la efectividad de la inversión a partir de la inclinación de la recta de ajuste y la dispersión observada?"
+      }
+    };
+
+    let activeChart = null;
+    let showPoints = true;
+    let showLine = true;
+
+    function switchCaseTab(caseNum) {
+      document.querySelectorAll('.case-subtab').forEach(btn => {
+        btn.classList.remove('bg-brand-600', 'text-white', 'shadow', 'bg-skysoft-100', 'text-skysoft-700');
+        btn.classList.add('bg-slate-100', 'text-slate-600');
+      });
+      const btn = document.getElementById(`case-btn-${caseNum}`);
+      if (caseNum === 6) {
+        btn.classList.add('bg-skysoft-100', 'text-skysoft-700');
+        renderInteractiveLab();
+      } else {
+        btn.classList.add('bg-brand-600', 'text-white', 'shadow');
+        renderCase(caseNum);
+      }
+      if (window.MathJax) MathJax.typesetPromise();
+    }
+
+    function renderCase(num) {
+      const c = casesData[num];
+      const container = document.getElementById('case-content-area');
+      container.innerHTML = `
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div class="lg:col-span-1 space-y-4">
+            <div class="bg-slate-50 p-4.5 rounded-2xl border border-slate-200">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-brand-700 bg-brand-100 px-2.5 py-1 rounded-full">${c.type}</span>
+              <h3 class="font-bold text-slate-900 text-sm mt-2">${c.title}</h3>
+              <p class="text-xs text-slate-600 mt-1.5 leading-relaxed">${c.desc}</p>
+              <div class="mt-4 pt-3 border-t border-slate-200 flex justify-between items-center text-xs">
+                <span class="font-bold text-slate-700">Coeficiente de Correlación:</span>
+                <span class="font-mono font-bold text-brand-700 bg-white px-2.5 py-1 rounded-xl border border-slate-200">\\(${c.rValue}\\)</span>
+              </div>
+            </div>
+
+            <!-- TOGGLE CONTROLS -->
+            <div class="bg-white p-4.5 rounded-2xl border border-slate-200 space-y-3 shadow-sm">
+              <h4 class="font-bold text-xs text-slate-800">Controles de Visualización GeoGebra</h4>
+              <div class="flex gap-2">
+                <button onclick="togglePoints()" id="btn-toggle-pts" class="flex-1 text-xs py-2.5 px-3 rounded-xl font-semibold bg-brand-600 text-white transition shadow-sm">Ocultar Puntos</button>
+                <button onclick="toggleLine()" id="btn-toggle-line" class="flex-1 text-xs py-2.5 px-3 rounded-xl font-semibold bg-skysoft-600 text-white transition shadow-sm">Ocultar Recta</button>
+              </div>
+            </div>
+
+            <!-- METACOGNITIVE PROMPT -->
+            <div class="bg-sunshine-50 border border-sunshine-100 p-4.5 rounded-2xl space-y-2 shadow-sm">
+              <h4 class="font-bold text-xs text-sunshine-800 flex items-center gap-1.5">🧠 Pregunta Metacognitiva</h4>
+              <p class="text-xs text-slate-700 leading-relaxed">${c.metaQ}</p>
+              <textarea rows="2" class="w-full text-xs p-2.5 border border-sunshine-200 rounded-xl bg-white focus:outline-none focus:ring-1 focus:ring-sunshine-500" placeholder="Escribe tu reflexión..."></textarea>
+            </div>
+          </div>
+
+          <!-- CHART CANVAS AREA -->
+          <div class="lg:col-span-2 bg-white p-5 rounded-2xl border border-slate-200 flex flex-col justify-center items-center relative min-h-[385px] shadow-sm">
+            <canvas id="caseChart" class="w-full max-h-[340px]"></canvas>
+          </div>
+        </div>
+      `;
+      drawCaseChart(c.data);
+      if (window.MathJax) MathJax.typesetPromise();
+    }
+
+    function drawCaseChart(rawData) {
+      const ctx = document.getElementById('caseChart').getContext('2d');
+      if (activeChart) activeChart.destroy();
+
+      let chartData = showPoints ? rawData : [];
+      
+      let datasets = [{
+        label: 'Nube de Puntos (x_i, y_i)',
+        data: chartData,
+        backgroundColor: '#16a34a',
+        pointRadius: 6,
+        pointHoverRadius: 8,
+        type: 'scatter'
+      }];
+
+      if (showLine && rawData.length > 0) {
+        const xVals = rawData.map(d => d.x);
+        const yVals = rawData.map(d => d.y);
+        const minX = Math.min(...xVals);
+        const maxX = Math.max(...xVals);
+        const minY = Math.min(...yVals);
+        const maxY = Math.max(...yVals);
+        
+        datasets.push({
+          label: 'Recta de Regresión Lineal y = mx + n',
+          data: [{x: minX, y: minY}, {x: maxX, y: maxY}],
+          type: 'line',
+          borderColor: '#0284c7',
+          borderWidth: 3,
+          pointRadius: 0,
+          fill: false
+        });
+      }
+
+      activeChart = new Chart(ctx, {
+        data: { datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: { type: 'linear', position: 'bottom', grid: { color: '#f1f5f9' } },
+            y: { grid: { color: '#f1f5f9' } }
+          }
+        }
+      });
+    }
+
+    function togglePoints() {
+      showPoints = !showPoints;
+      const btn = document.getElementById('btn-toggle-pts');
+      btn.innerText = showPoints ? "Ocultar Puntos" : "Mostrar Puntos";
+      btn.className = showPoints ? "flex-1 text-xs py-2.5 px-3 rounded-xl font-semibold bg-brand-600 text-white transition shadow-sm" : "flex-1 text-xs py-2.5 px-3 rounded-xl font-semibold bg-slate-300 text-slate-700 transition shadow-sm";
+      const activeBtn = document.querySelector('.case-subtab.bg-brand-600');
+      if (activeBtn) {
+        const num = activeBtn.id.replace('case-btn-', '');
+        drawCaseChart(casesData[num].data);
+      }
+    }
+
+    function toggleLine() {
+      showLine = !showLine;
+      const btn = document.getElementById('btn-toggle-line');
+      btn.innerText = showLine ? "Ocultar Recta" : "Mostrar Recta";
+      btn.className = showLine ? "flex-1 text-xs py-2.5 px-3 rounded-xl font-semibold bg-skysoft-600 text-white transition shadow-sm" : "flex-1 text-xs py-2.5 px-3 rounded-xl font-semibold bg-slate-300 text-slate-700 transition shadow-sm";
+      const activeBtn = document.querySelector('.case-subtab.bg-brand-600');
+      if (activeBtn) {
+        const num = activeBtn.id.replace('case-btn-', '');
+        drawCaseChart(casesData[num].data);
+      }
+    }
+
+    // --- LABORATORY DYNAMIC r SIMULATOR (GEOGEBRA STYLE) ---
+    function renderInteractiveLab() {
+      const container = document.getElementById('case-content-area');
+      container.innerHTML = `
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div class="lg:col-span-1 space-y-4">
+            <div class="bg-skysoft-50 p-4.5 rounded-2xl border border-skysoft-100">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-skysoft-700 bg-skysoft-100 px-2.5 py-1 rounded-full">Laboratorio GeoGebra Style</span>
+              <h3 class="font-bold text-slate-900 text-sm mt-2">Deslizador Dinámico de Correlación (\(r\))</h3>
+              <p class="text-xs text-slate-600 mt-1.5 leading-relaxed">Mueve el deslizador para alterar el valor de \(r\) y observa en tiempo real cómo se comporta la nube de puntos y la recta de ajuste \(y = mx + n\).</p>
+            </div>
+
+            <!-- SLIDER CONTROL -->
+            <div class="bg-white p-4.5 rounded-2xl border border-slate-200 space-y-3 shadow-sm">
+              <div class="flex justify-between items-center text-xs">
+                <span class="font-bold text-slate-700">Valor de \(r\):</span>
+                <span id="r-slider-val" class="font-mono font-bold text-skysoft-600 text-sm">0.80</span>
+              </div>
+              <input type="range" id="r-slider" min="-1" max="1" step="0.05" value="0.80" oninput="updateLabSimulation(this.value)" class="w-full accent-skysoft-600 cursor-pointer">
+              <div class="flex justify-between text-[10px] text-slate-400 font-mono">
+                <span>-1.0 (Negativa)</span>
+                <span>0.0 (Nula)</span>
+                <span>+1.0 (Positiva)</span>
+              </div>
+            </div>
+
+            <!-- METACOGNITION LAB -->
+            <div class="bg-sunshine-50 border border-sunshine-100 p-4.5 rounded-2xl space-y-2 shadow-sm">
+              <h4 class="font-bold text-xs text-sunshine-800 flex items-center gap-1.5">🧠 Pregunta Metacognitiva</h4>
+              <p class="text-xs text-slate-700 leading-relaxed">¿Qué rango de \(r\) hace que la nube de puntos se aproxime a una línea recta perfecta y cuándo se desorganiza en una nube sin patrón?</p>
+              <textarea rows="2" class="w-full text-xs p-2.5 border border-sunshine-200 rounded-xl bg-white focus:outline-none focus:ring-1 focus:ring-sunshine-500" placeholder="Escribe tu conclusión..."></textarea>
+            </div>
+          </div>
+
+          <!-- LAB CHART AREA -->
+          <div class="lg:col-span-2 bg-white p-5 rounded-2xl border border-slate-200 flex flex-col justify-center items-center relative min-h-[385px] shadow-sm">
+            <canvas id="labChart" class="w-full max-h-[340px]"></canvas>
+          </div>
+        </div>
+      `;
+      updateLabSimulation(0.80);
+      if (window.MathJax) MathJax.typesetPromise();
+    }
+
+    let labChart = null;
+    function updateLabSimulation(rVal) {
+      document.getElementById('r-slider-val').innerText = parseFloat(rVal).toFixed(2);
+      
+      let points = [];
+      const n = 28;
+      for (let i = 0; i < n; i++) {
+        let x = i * (10 / n);
+        let noise = (Math.random() - 0.5) * (2 - Math.abs(rVal) * 1.8) * 4;
+        let y = rVal * x * 2 + 10 + noise;
+        points.push({x: parseFloat(x.toFixed(2)), y: parseFloat(y.toFixed(2))});
+      }
+
+      const ctx = document.getElementById('labChart').getContext('2d');
+      if (labChart) labChart.destroy();
+
+      const minX = 0, maxX = 10;
+      const minY = rVal * minX * 2 + 10;
+      const maxY = rVal * maxX * 2 + 10;
+
+      labChart = new Chart(ctx, {
+        data: {
+          datasets: [
+            {
+              label: 'Nube Dinámica (x_i, y_i)',
+              data: points,
+              backgroundColor: '#0ea5e9',
+              pointRadius: 5,
+              type: 'scatter'
+            },
+            {
+              label: 'Recta de Regresión y = mx + n',
+              data: [{x: minX, y: minY}, {x: maxX, y: maxY}],
+              type: 'line',
+              borderColor: '#eab308',
+              borderWidth: 3,
+              pointRadius: 0,
+              fill: false
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: { type: 'linear', position: 'bottom', grid: { color: '#f1f5f9' } },
+            y: { grid: { color: '#f1f5f9' } }
+          }
+        }
+      });
+    }
+
+    window.onload = function() {
+      updateTimerDisplay();
+      renderCase(1);
+      if (window.MathJax) MathJax.typesetPromise();
+    };
+  </script>
+</body>
+</html>
