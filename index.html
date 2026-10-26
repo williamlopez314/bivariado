@@ -12,7 +12,7 @@
   <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   
-  <!-- Firebase SDK Compat (Para integración directa en HTML) -->
+  <!-- Firebase SDK Compat -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
@@ -427,7 +427,6 @@
       btn.disabled = true;
       btn.innerText = "Guardando en la nube...";
 
-      // Enviar a Firestore
       db.collection("resultados_quiz_bivariado").add({
         name: name,
         q1: q1Val.value,
@@ -483,7 +482,7 @@
       if (confirm("¿Estás seguro de eliminar el registro de este estudiante de la base de datos?")) {
         db.collection("resultados_quiz_bivariado").doc(docId).delete()
           .then(() => {
-            updateTeacherDashboardData(); // Refrescar la tabla
+            updateTeacherDashboardData();
           })
           .catch((error) => console.error("Error al eliminar documento:", error));
       }
@@ -512,7 +511,6 @@
           const p3Pct = Math.round((q3Correct / total) * 100);
           const p4Pct = Math.round((q4Correct / total) * 100);
 
-          // Populate table
           tbody.innerHTML = '';
           if (studentSubmissions.length === 0) {
             tbody.innerHTML = '<tr><td colspan="7" class="text-center p-4 text-slate-500">Aún no hay respuestas registradas.</td></tr>';
@@ -533,7 +531,6 @@
             });
           }
 
-          // Render Teacher Chart
           const ctx = document.getElementById('teacherChart').getContext('2d');
           if (teacherChartInstance) teacherChartInstance.destroy();
 
