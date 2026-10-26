@@ -4,17 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Laboratorio Estadístico Bivariado | 1° Medio</title>
-  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Google Fonts: Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <!-- MathJax for rigorous LaTeX formatting -->
   <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
   <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-  <!-- Chart.js for interactive scatter plots -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <!-- Firebase SDK Compat (Para integración directa en HTML) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
   <script>
     tailwind.config = {
       theme: {
@@ -42,8 +43,6 @@
     <!-- HEADER / NAVIGATION -->
     <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
       <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col md:flex-row justify-between items-center gap-4">
-        
-        <!-- Title & Badge -->
         <div class="flex items-center gap-3">
           <div class="bg-brand-600 text-white p-2.5 rounded-2xl shadow-md">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
@@ -55,7 +54,6 @@
         </div>
       </div>
 
-      <!-- MAIN TABS (INICIO, DESARROLLO, CIERRE, DOCENTE) -->
       <div class="bg-slate-100 border-t border-slate-200 px-4">
         <div class="max-w-7xl mx-auto flex space-x-2 overflow-x-auto py-2">
           <button onclick="switchMainTab('inicio')" id="tab-btn-inicio" class="main-tab px-4 py-2.5 rounded-xl text-sm font-semibold text-brand-800 bg-white shadow-sm flex items-center gap-2 border border-slate-200">
@@ -79,8 +77,6 @@
 
       <!-- ==================== TAB 1: INICIO ==================== -->
       <section id="tab-inicio" class="space-y-6">
-        
-        <!-- TEMPORIZADOR DE ETAPA -->
         <div class="flex justify-between items-center bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
           <div class="flex items-center gap-3">
             <span class="text-xl">⏱️</span>
@@ -92,7 +88,6 @@
           <button onclick="toggleTimer('inicio')" id="btn-timer-inicio" class="bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold px-4 py-2 rounded-xl shadow transition">Iniciar Temporizador</button>
         </div>
 
-        <!-- LEARNING ROUTE -->
         <div class="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm">
           <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Ruta de Aprendizaje Activa (Apoyo PIE)</h3>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -112,7 +107,6 @@
           </div>
         </div>
 
-        <!-- OBJECTIVE CARD -->
         <div class="bg-gradient-to-br from-brand-700 to-brand-900 text-white rounded-3xl p-6 shadow-md relative overflow-hidden">
           <div class="relative z-10">
             <span class="bg-white/25 backdrop-blur text-white text-xs font-semibold px-3.5 py-1 rounded-full uppercase tracking-wider">Objetivo de la Sesión</span>
@@ -122,35 +116,29 @@
           </div>
         </div>
 
-        <!-- METACOGNITION ACTIVATION BOX -->
         <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
           <span class="text-[10px] font-bold uppercase tracking-wider text-brand-600 bg-brand-50 px-2.5 py-1 rounded-full">Reflexión Inicial (3 Preguntas)</span>
           <h3 class="font-bold text-slate-900 text-sm mt-3 mb-2">Preguntas Metacognitivas de Apertura</h3>
-          <p class="text-xs text-slate-600 mb-4">Antes de empezar con los casos interactivos, responde individualmente:</p>
-          
           <div class="space-y-4">
             <div>
               <label class="block text-xs font-medium text-slate-700 mb-1">1. ¿Cómo imaginas que se vería en un plano cartesiano \((X, Y)\) la relación entre las horas de estudio y las notas de un examen?</label>
-              <textarea rows="2" class="w-full text-xs p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:outline-none bg-slate-50/50" placeholder="Escribe tu hipótesis aquí..."></textarea>
+              <textarea rows="2" class="w-full text-xs p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:outline-none bg-slate-50/50"></textarea>
             </div>
             <div>
               <label class="block text-xs font-medium text-slate-700 mb-1">2. ¿Qué factores externos crees que podrían alterar o confundir la relación entre esas dos variables?</label>
-              <textarea rows="2" class="w-full text-xs p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:outline-none bg-slate-50/50" placeholder="Escribe tu reflexión aquí..."></textarea>
+              <textarea rows="2" class="w-full text-xs p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:outline-none bg-slate-50/50"></textarea>
             </div>
             <div>
               <label class="block text-xs font-medium text-slate-700 mb-1">3. ¿Por qué es importante analizar dos variables simultáneamente (bivariado) en lugar de analizarlas por separado?</label>
-              <textarea rows="2" class="w-full text-xs p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:outline-none bg-slate-50/50" placeholder="Escribe tu respuesta aquí..."></textarea>
+              <textarea rows="2" class="w-full text-xs p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:outline-none bg-slate-50/50"></textarea>
             </div>
           </div>
           <button class="mt-4 bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold py-2.5 px-4 rounded-xl shadow transition">Registrar Reflexiones</button>
         </div>
-
       </section>
 
       <!-- ==================== TAB 2: DESARROLLO & CASOS ==================== -->
       <section id="tab-desarrollo" class="hidden space-y-6">
-        
-        <!-- TEMPORIZADOR DE ETAPA -->
         <div class="flex justify-between items-center bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
           <div class="flex items-center gap-3">
             <span class="text-xl">⏱️</span>
@@ -162,7 +150,6 @@
           <button onclick="toggleTimer('desarrollo')" id="btn-timer-desarrollo" class="bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold px-4 py-2 rounded-xl shadow transition">Iniciar Temporizador</button>
         </div>
 
-        <!-- SUBTABS FOR CASES AND SIMULATOR -->
         <div class="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm">
           <div class="flex flex-wrap gap-2 border-b border-slate-200 pb-4">
             <button onclick="switchCaseTab(1)" id="case-btn-1" class="case-subtab px-3.5 py-2 rounded-xl text-xs font-semibold bg-brand-600 text-white shadow">Caso 1 (+ Fuerte)</button>
@@ -173,17 +160,12 @@
             <button onclick="switchCaseTab(6)" id="case-btn-6" class="case-subtab px-3.5 py-2 rounded-xl text-xs font-semibold bg-skysoft-100 text-skysoft-700 hover:bg-skysoft-200">🔬 Laboratorio GeoGebra r</button>
           </div>
 
-          <div id="case-content-area" class="mt-6">
-            <!-- Dynamically rendered via JS -->
-          </div>
+          <div id="case-content-area" class="mt-6"></div>
         </div>
-
       </section>
 
       <!-- ==================== TAB 3: CIERRE & QUIZ ==================== -->
       <section id="tab-cierre" class="hidden space-y-6">
-        
-        <!-- TEMPORIZADOR DE ETAPA -->
         <div class="flex justify-between items-center bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
           <div class="flex items-center gap-3">
             <span class="text-xl">⏱️</span>
@@ -195,12 +177,11 @@
           <button onclick="toggleTimer('cierre')" id="btn-timer-cierre" class="bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold px-4 py-2 rounded-xl shadow transition">Iniciar Temporizador</button>
         </div>
 
-        <!-- QUIZ CONTAINER -->
         <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm max-w-3xl mx-auto">
           <div class="border-b border-slate-200 pb-4 mb-6">
             <span class="bg-brand-100 text-brand-800 text-xs font-semibold px-3 py-1 rounded-full">Evaluación Formativa Interactiva</span>
             <h2 class="text-xl font-bold text-slate-900 mt-2">Quiz de Consolidación Bivariada</h2>
-            <p class="text-xs text-slate-500">Responde las 5 preguntas (4 alternativas y 1 reflexión) para registrar tu progreso.</p>
+            <p class="text-xs text-slate-500">Responde las 5 preguntas para enviar y registrar tu progreso en el sistema.</p>
           </div>
 
           <div id="quiz-form-box" class="space-y-6">
@@ -265,7 +246,7 @@
               <textarea id="quiz-meta" rows="3" class="w-full text-xs p-3.5 border border-slate-300 rounded-2xl focus:ring-2 focus:ring-brand-500 focus:outline-none bg-white" placeholder="Explica tu proceso reflexivo..."></textarea>
             </div>
 
-            <button onclick="submitQuiz()" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs py-3.5 rounded-2xl shadow transition">Enviar Quiz & Registrar en Sistema</button>
+            <button onclick="submitQuiz()" id="btnSubmitQuiz" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs py-3.5 rounded-2xl shadow transition">Enviar Quiz & Registrar en Sistema</button>
           </div>
 
           <div id="quiz-results-box" class="hidden space-y-6 text-center py-8">
@@ -282,7 +263,6 @@
 
       <!-- ==================== TAB 4: ACCESO DOCENTE ==================== -->
       <section id="tab-docente" class="hidden space-y-6 max-w-6xl mx-auto">
-        
         <div id="docente-lock" class="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm text-center max-w-md mx-auto my-12">
           <div class="bg-skysoft-100 text-skysoft-700 w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4 font-bold text-lg">🔒</div>
           <h3 class="text-base font-bold text-slate-900">Área Exclusiva Docente</h3>
@@ -304,9 +284,12 @@
         <div id="docente-dashboard" class="hidden space-y-6">
           <div class="flex justify-between items-center bg-white border border-slate-200 p-5 rounded-3xl shadow-sm">
             <div>
-              <h2 class="text-lg font-bold text-slate-900">Analítica de Resultados (5 Preguntas)</h2>
+              <h2 class="text-lg font-bold text-slate-900">Analítica de Resultados (Firebase)</h2>
             </div>
-            <button onclick="lockTeacherPanel()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold py-2.5 px-4 rounded-xl transition">Bloquear Panel</button>
+            <div class="flex gap-2">
+                <button onclick="updateTeacherDashboardData()" class="bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold py-2.5 px-4 rounded-xl transition">🔄 Actualizar</button>
+                <button onclick="lockTeacherPanel()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold py-2.5 px-4 rounded-xl transition">Bloquear Panel</button>
+            </div>
           </div>
 
           <!-- CHARTS -->
@@ -317,7 +300,7 @@
             </div>
           </div>
 
-          <!-- STUDENTS TABLE CON OPCIÓN ELIMINAR -->
+          <!-- STUDENTS TABLE -->
           <div class="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm overflow-hidden">
             <h4 class="font-bold text-xs text-slate-800 mb-4 uppercase">Registro Detallado por Estudiante</h4>
             <div class="overflow-x-auto">
@@ -334,7 +317,7 @@
                   </tr>
                 </thead>
                 <tbody id="students-table-body" class="divide-y divide-slate-100">
-                  <!-- Populated via JS -->
+                  <!-- Populated via Firebase -->
                 </tbody>
               </table>
             </div>
@@ -346,6 +329,22 @@
   </div>
 
   <script>
+    // ==========================================
+    // CONFIGURACIÓN DE FIREBASE (COMPAT)
+    // ==========================================
+    const firebaseConfig = {
+      apiKey: "AIzaSyCE5J_Xf5m_EB7IEbJ0e14SZj3BUO4DYkQ",
+      authDomain: "bivariado-795dc.firebaseapp.com",
+      projectId: "bivariado-795dc",
+      storageBucket: "bivariado-795dc.firebasestorage.app",
+      messagingSenderId: "56060998868",
+      appId: "1:56060998868:web:cc72827fd0df2773ed7741",
+      measurementId: "G-9S3MZK1D68"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
     // --- STAGE TIMERS STATE ---
     const stageTimers = {
       inicio: { time: 15 * 60, interval: null },
@@ -401,7 +400,6 @@
         activeBtn.classList.remove('text-slate-600');
       }
 
-      // Reiniciar visualizaciones de casos al cambiar de pestaña
       if(tabId === 'desarrollo') {
          showPoints = false; showLine = false; showR = false;
          const activeBtn = document.querySelector('.case-subtab.bg-brand-600');
@@ -411,12 +409,7 @@
       if (window.MathJax) MathJax.typesetPromise();
     }
 
-    // --- QUIZ & STORAGE STATE ---
-    let studentSubmissions = [
-      {name: "Matías Soto", q1: "B", q2: "B", q3: "B", q4: "A", meta: "Me costó entender por qué r alto no es causa directa."},
-      {name: "Antonia Pérez", q1: "B", q2: "B", q3: "B", q4: "A", meta: "Usé el deslizador para ver cómo se alineaban los puntos."}
-    ];
-
+    // --- QUIZ & FIREBASE STORAGE ---
     function submitQuiz() {
       const name = document.getElementById('student-name').value;
       const q1Val = document.querySelector('input[name="q1"]:checked');
@@ -430,18 +423,32 @@
         return;
       }
 
-      studentSubmissions.push({
+      const btn = document.getElementById('btnSubmitQuiz');
+      btn.disabled = true;
+      btn.innerText = "Guardando en la nube...";
+
+      // Enviar a Firestore
+      db.collection("resultados_quiz_bivariado").add({
         name: name,
         q1: q1Val.value,
         q2: q2Val.value,
         q3: q3Val.value,
         q4: q4Val.value,
-        meta: metaVal.trim() || "Sin observaciones."
+        meta: metaVal.trim() || "Sin observaciones.",
+        fecha: firebase.firestore.FieldValue.serverTimestamp()
+      })
+      .then(() => {
+        document.getElementById('quiz-form-box').classList.add('hidden');
+        document.getElementById('quiz-results-box').classList.remove('hidden');
+        btn.disabled = false;
+        btn.innerText = "Enviar Quiz & Registrar en Sistema";
+      })
+      .catch((error) => {
+        console.error("Error al guardar en Firebase:", error);
+        alert("Hubo un error al enviar tus resultados. Verifica tu conexión.");
+        btn.disabled = false;
+        btn.innerText = "Enviar Quiz & Registrar en Sistema";
       });
-
-      document.getElementById('quiz-form-box').classList.add('hidden');
-      document.getElementById('quiz-results-box').classList.remove('hidden');
-      updateTeacherDashboardData();
     }
 
     function resetQuizView() {
@@ -472,66 +479,84 @@
       document.getElementById('login-error').classList.add('hidden');
     }
 
-    function deleteStudent(index) {
-      if (confirm("¿Estás seguro de eliminar el registro de este estudiante?")) {
-        studentSubmissions.splice(index, 1);
-        updateTeacherDashboardData();
+    function deleteStudent(docId) {
+      if (confirm("¿Estás seguro de eliminar el registro de este estudiante de la base de datos?")) {
+        db.collection("resultados_quiz_bivariado").doc(docId).delete()
+          .then(() => {
+            updateTeacherDashboardData(); // Refrescar la tabla
+          })
+          .catch((error) => console.error("Error al eliminar documento:", error));
       }
     }
 
     let teacherChartInstance = null;
     function updateTeacherDashboardData() {
-      const total = studentSubmissions.length || 1; 
-      const q1Correct = studentSubmissions.filter(s => s.q1 === 'B').length;
-      const q2Correct = studentSubmissions.filter(s => s.q2 === 'B').length;
-      const q3Correct = studentSubmissions.filter(s => s.q3 === 'B').length;
-      const q4Correct = studentSubmissions.filter(s => s.q4 === 'A').length;
-
-      const p1Pct = Math.round((q1Correct / total) * 100);
-      const p2Pct = Math.round((q2Correct / total) * 100);
-      const p3Pct = Math.round((q3Correct / total) * 100);
-      const p4Pct = Math.round((q4Correct / total) * 100);
-
-      // Populate table
       const tbody = document.getElementById('students-table-body');
-      tbody.innerHTML = '';
-      studentSubmissions.forEach((s, index) => {
-        const tr = document.createElement('tr');
-        tr.className = "hover:bg-slate-50 transition";
-        tr.innerHTML = `
-          <td class="p-3 font-medium text-slate-900">${s.name}</td>
-          <td class="p-3 text-center"><span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${s.q1 === 'B' ? 'bg-brand-100 text-brand-800' : 'bg-rose-100 text-rose-800'}">${s.q1}</span></td>
-          <td class="p-3 text-center"><span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${s.q2 === 'B' ? 'bg-skysoft-100 text-skysoft-800' : 'bg-rose-100 text-rose-800'}">${s.q2}</span></td>
-          <td class="p-3 text-center"><span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${s.q3 === 'B' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">${s.q3}</span></td>
-          <td class="p-3 text-center"><span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${s.q4 === 'A' ? 'bg-indigo-100 text-indigo-800' : 'bg-rose-100 text-rose-800'}">${s.q4}</span></td>
-          <td class="p-3 text-slate-600 italic">"${s.meta}"</td>
-          <td class="p-3 text-center"><button onclick="deleteStudent(${index})" class="text-rose-500 hover:text-rose-700 font-bold" title="Eliminar estudiante">🗑️</button></td>
-        `;
-        tbody.appendChild(tr);
-      });
+      tbody.innerHTML = '<tr><td colspan="7" class="text-center p-4">Cargando resultados de Firestore...</td></tr>';
 
-      // Render Teacher Chart
-      const ctx = document.getElementById('teacherChart').getContext('2d');
-      if (teacherChartInstance) teacherChartInstance.destroy();
+      db.collection("resultados_quiz_bivariado").orderBy("fecha", "desc").get()
+        .then((querySnapshot) => {
+          let studentSubmissions = [];
+          querySnapshot.forEach((doc) => {
+            studentSubmissions.push({ id: doc.id, ...doc.data() });
+          });
 
-      teacherChartInstance = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: ['P1 (r)', 'P2 (Causalidad)', 'P3 (Recta)', 'P4 (Dispersión)'],
-          datasets: [{
-            label: '% de Logro del Curso',
-            data: studentSubmissions.length ? [p1Pct, p2Pct, p3Pct, p4Pct] : [0,0,0,0],
-            backgroundColor: ['#22c55e', '#0ea5e9', '#8b5cf6', '#f59e0b'],
-            borderRadius: 8
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: { y: { beginAtZero: true, max: 100 } },
-          plugins: { legend: { display: false } }
-        }
-      });
+          const total = studentSubmissions.length || 1; 
+          const q1Correct = studentSubmissions.filter(s => s.q1 === 'B').length;
+          const q2Correct = studentSubmissions.filter(s => s.q2 === 'B').length;
+          const q3Correct = studentSubmissions.filter(s => s.q3 === 'B').length;
+          const q4Correct = studentSubmissions.filter(s => s.q4 === 'A').length;
+
+          const p1Pct = Math.round((q1Correct / total) * 100);
+          const p2Pct = Math.round((q2Correct / total) * 100);
+          const p3Pct = Math.round((q3Correct / total) * 100);
+          const p4Pct = Math.round((q4Correct / total) * 100);
+
+          // Populate table
+          tbody.innerHTML = '';
+          if (studentSubmissions.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center p-4 text-slate-500">Aún no hay respuestas registradas.</td></tr>';
+          } else {
+            studentSubmissions.forEach((s) => {
+              const tr = document.createElement('tr');
+              tr.className = "hover:bg-slate-50 transition";
+              tr.innerHTML = `
+                <td class="p-3 font-medium text-slate-900">${s.name}</td>
+                <td class="p-3 text-center"><span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${s.q1 === 'B' ? 'bg-brand-100 text-brand-800' : 'bg-rose-100 text-rose-800'}">${s.q1}</span></td>
+                <td class="p-3 text-center"><span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${s.q2 === 'B' ? 'bg-skysoft-100 text-skysoft-800' : 'bg-rose-100 text-rose-800'}">${s.q2}</span></td>
+                <td class="p-3 text-center"><span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${s.q3 === 'B' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">${s.q3}</span></td>
+                <td class="p-3 text-center"><span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${s.q4 === 'A' ? 'bg-indigo-100 text-indigo-800' : 'bg-rose-100 text-rose-800'}">${s.q4}</span></td>
+                <td class="p-3 text-slate-600 italic">"${s.meta}"</td>
+                <td class="p-3 text-center"><button onclick="deleteStudent('${s.id}')" class="text-rose-500 hover:text-rose-700 font-bold" title="Eliminar estudiante">🗑️</button></td>
+              `;
+              tbody.appendChild(tr);
+            });
+          }
+
+          // Render Teacher Chart
+          const ctx = document.getElementById('teacherChart').getContext('2d');
+          if (teacherChartInstance) teacherChartInstance.destroy();
+
+          teacherChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+              labels: ['P1 (r)', 'P2 (Causalidad)', 'P3 (Recta)', 'P4 (Dispersión)'],
+              datasets: [{
+                label: '% de Logro del Curso',
+                data: studentSubmissions.length ? [p1Pct, p2Pct, p3Pct, p4Pct] : [0,0,0,0],
+                backgroundColor: ['#22c55e', '#0ea5e9', '#8b5cf6', '#f59e0b'],
+                borderRadius: 8
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              scales: { y: { beginAtZero: true, max: 100 } },
+              plugins: { legend: { display: false } }
+            }
+          });
+        })
+        .catch((error) => console.error("Error al leer desde Firestore:", error));
     }
 
     // --- CASE DATA & RENDERER ---
@@ -584,7 +609,6 @@
     };
 
     let activeChart = null;
-    // Ocultos por defecto para que los estudiantes los activen
     let showPoints = false;
     let showLine = false;
     let showR = false;
@@ -596,7 +620,6 @@
       });
       const btn = document.getElementById(`case-btn-${caseNum}`);
       
-      // Reiniciar controles visuales al cambiar de caso
       showPoints = false;
       showLine = false;
       showR = false;
@@ -719,7 +742,6 @@
         const xVals = rawData.map(d => d.x);
         const yVals = rawData.map(d => d.y);
         
-        // Calcular pendiente y n
         let n = xVals.length;
         let sumX = xVals.reduce((a,b)=>a+b,0);
         let sumY = yVals.reduce((a,b)=>a+b,0);
@@ -818,7 +840,7 @@
       document.getElementById('r-slider-val').innerText = parseFloat(rVal).toFixed(2);
       
       let points = [];
-      const n = 35; // Aumentado la cantidad de puntos también en laboratorio
+      const n = 35;
       for (let i = 0; i < n; i++) {
         let x = i * (10 / n);
         let noise = (Math.random() - 0.5) * (2 - Math.abs(rVal) * 1.8) * 4;
